@@ -10,7 +10,7 @@ import { auth, db, storage } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { UserProfile, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';

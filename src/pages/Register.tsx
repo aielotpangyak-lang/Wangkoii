@@ -3,7 +3,7 @@ import { doc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
