@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, Coffee, Smartphone, QrCode, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -36,7 +36,7 @@ export default function SupportPage() {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => window.close()}
+            onClick={() => navigate(-1)}
             className="rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-6 h-6" />

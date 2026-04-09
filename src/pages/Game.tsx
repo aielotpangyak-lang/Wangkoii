@@ -41,11 +41,13 @@ export default function Game() {
   const moveSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'));
   const winSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'));
   const loseSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'));
+  const clickSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'));
 
   useEffect(() => {
     moveSound.current.volume = 0.3;
     winSound.current.volume = 0.4;
     loseSound.current.volume = 0.3;
+    clickSound.current.volume = 0.2;
   }, []);
 
   useEffect(() => {
@@ -306,6 +308,7 @@ export default function Game() {
 
     await updateDoc(doc(db, 'games', game.id), update);
     moveSound.current.play().catch(() => {});
+    clickSound.current.play().catch(() => {});
   };
 
   const calculateWinner = (squares: (string | null)[]) => {
