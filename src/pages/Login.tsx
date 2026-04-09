@@ -73,7 +73,7 @@ export default function Login() {
           <div className="flex flex-col items-center gap-2 pt-4">
             <div className="w-12 h-0.5 bg-border" />
             <p className="text-center text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black">
-              60 FPS PERFORMANCE
+              BEST PERFORMANCE
             </p>
           </div>
         </CardContent>
