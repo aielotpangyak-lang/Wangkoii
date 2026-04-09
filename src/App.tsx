@@ -4,11 +4,11 @@
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, updateDoc, serverTimestamp } from 'firebase/firestore';
+import React, { useEffect } from 'react';
+import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Toaster } from './components/ui/sonner';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -16,37 +16,13 @@ import Game from './pages/Game';
 import Profile from './pages/Profile';
 import ChatPage from './pages/Chat';
 import SupportPage from './pages/Support';
-import { UserProfile } from './types';
 import NetworkStatus from './components/NetworkStatus';
 import CoffeeButton from './components/CoffeeButton';
 
 function AuthGuard({ children, requireProfile = true }: { children: React.ReactNode, requireProfile?: boolean }) {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { user, profile, loading } = useAuth();
 
-  useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        const docRef = doc(db, 'users', u.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data() as UserProfile);
-          // Update online status
-          await updateDoc(docRef, {
-            isOnline: true,
-            lastSeen: serverTimestamp()
-          });
-        } else {
-          setProfile(null);
-        }
-      }
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center h-screen bg-background text-primary font-black uppercase tracking-widest text-xs animate-pulse">Authenticating...</div>;
 
   if (!user) return <Navigate to="/login" />;
 
@@ -56,37 +32,52 @@ function AuthGuard({ children, requireProfile = true }: { children: React.ReactN
 }
 
 export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { user, profile } = useAuth();
+
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      if (auth.currentUser) {
-        const userRef = doc(db, 'users', auth.currentUser.uid);
+      if (user && profile) {
+        const userRef = doc(db, 'users', user.uid);
         await updateDoc(userRef, {
           isOnline: document.visibilityState === 'visible',
           lastSeen: serverTimestamp()
-        });
+        }).catch(() => {});
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Initial update
-    if (auth.currentUser) {
-      updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        isOnline: true,
-        lastSeen: serverTimestamp()
-      });
-    }
+    const initialUpdate = async () => {
+      if (user && profile) {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          isOnline: true,
+          lastSeen: serverTimestamp()
+        }).catch(() => {});
+      }
+    };
+    initialUpdate();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (auth.currentUser) {
-        updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      if (user && profile) {
+        const userRef = doc(db, 'users', user.uid);
+        updateDoc(userRef, {
           isOnline: false,
           lastSeen: serverTimestamp()
-        });
+        }).catch(() => {});
       }
     };
-  }, [auth.currentUser]);
+  }, [user?.uid, !!profile]);
 
   return (
     <Router>

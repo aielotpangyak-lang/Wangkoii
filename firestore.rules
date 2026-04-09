@@ -65,7 +65,7 @@ service cloud.firestore {
              data.uid is string &&
              data.username is string &&
              data.username.matches('^[a-z0-9]{6,20}$') &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 50;
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100;
     }
 
     function isValidChallenge(data) {

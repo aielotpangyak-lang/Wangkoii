@@ -305,7 +305,7 @@ export default function Dashboard() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                     >
-                      <Card className="bg-white border-border hover:border-primary transition-all cursor-pointer group overflow-hidden rounded-2xl shadow-sm" onClick={() => window.open(`/game/${game.id}`, '_blank')}>
+                      <Card className="bg-white border-border hover:border-primary transition-all cursor-pointer group overflow-hidden rounded-2xl shadow-sm" onClick={() => navigate(`/game/${game.id}`)}>
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-muted flex items-center justify-center border border-border rounded-xl group-hover:bg-primary/10 transition-colors">
@@ -322,17 +322,17 @@ export default function Dashboard() {
                               {game.turn === auth.currentUser?.uid && (
                                 <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                               )}
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                className="rounded-xl border-border hover:border-primary font-bold text-xs h-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(`/game/${game.id}`, '_blank');
-                                }}
-                              >
-                                PLAY
-                              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="rounded-xl border-border hover:border-primary font-bold text-xs h-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/game/${game.id}`);
+                }}
+              >
+                PLAY
+              </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -445,7 +445,7 @@ export default function Dashboard() {
               variant="ghost" 
               size="icon" 
               className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
-              onClick={() => window.open('/chat', '_blank')}
+              onClick={() => navigate('/chat')}
             >
               <MessageSquare className="w-5 h-5" />
             </Button>
@@ -472,7 +472,7 @@ export default function Dashboard() {
               variant="ghost" 
               size="icon" 
               className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted overflow-hidden"
-              onClick={() => window.open('/profile', '_blank')}
+              onClick={() => navigate('/profile')}
             >
               {currentUserProfile?.photoURL ? (
                 <img src={currentUserProfile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -541,14 +541,17 @@ export default function Dashboard() {
                         {randomOnlinePlayers.map(user => (
                           <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
-                                {user.photoURL ? (
-                                  <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                ) : <User className="w-5 h-5 text-pink-400" />}
+                              <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                                  {user.photoURL ? (
+                                    <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  ) : <User className="w-5 h-5 text-pink-400" />}
+                                </div>
+                                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
                               </div>
                               <div>
                                 <p className="font-bold text-sm text-pink-900">{user.name}</p>
-                                <p className="text-xs text-green-500 font-bold">Online</p>
+                                <p className="text-xs text-green-500 font-bold uppercase tracking-widest text-[8px]">Online</p>
                               </div>
                             </div>
                             <Button size="sm" variant="outline" className="rounded-xl border-pink-200 text-pink-600 hover:bg-pink-50 font-bold" onClick={() => openChallengeModal(user)}>

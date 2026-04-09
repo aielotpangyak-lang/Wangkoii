@@ -138,9 +138,9 @@ export default function Profile() {
     <div className="min-h-screen text-foreground relative overflow-hidden font-sans pb-12">
       <header className="bg-white border-b border-border h-16 flex items-center px-4 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto w-full flex items-center justify-between">
-          <Button variant="ghost" onClick={() => window.close()} className="gap-2 text-muted-foreground hover:text-foreground rounded-xl font-bold">
+          <Button variant="ghost" onClick={() => navigate('/')} className="gap-2 text-muted-foreground hover:text-foreground rounded-xl font-bold">
             <ArrowLeft className="w-4 h-4" />
-            Close
+            Back
           </Button>
           <h1 className="font-black text-sm text-foreground uppercase tracking-widest">My Profile</h1>
           <div className="w-20" />

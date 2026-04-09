@@ -27,6 +27,7 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
   const [inputText, setInputText] = useState('');
   const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const userId = auth.currentUser?.uid;
 
@@ -97,10 +98,11 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !sharedKey || !chatId || !userId) return;
+    if (!inputText.trim() || !sharedKey || !chatId || !userId || isSending) return;
 
     const text = inputText;
     setInputText('');
+    setIsSending(true);
 
     try {
       const { encrypted, iv } = await encryptMessage(text, sharedKey);
@@ -113,6 +115,9 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
       });
     } catch (err) {
       toast.error("Failed to send encrypted message.");
+      setInputText(text); // Restore text on failure
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -159,12 +164,18 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
                 )}
               >
                 <div className={cn(
-                  "px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm",
+                  "px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm relative group transition-all",
                   msg.senderUid === userId 
-                    ? "bg-primary text-white rounded-tr-none" 
-                    : "bg-muted text-foreground border border-border rounded-tl-none"
+                    ? "bg-primary text-white rounded-tr-none hover:bg-primary/90" 
+                    : "bg-white text-foreground border border-border rounded-tl-none hover:bg-muted/50"
                 )}>
                   {msg.text}
+                  <div className={cn(
+                    "absolute -bottom-5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black uppercase tracking-widest text-muted-foreground",
+                    msg.senderUid === userId ? "right-0" : "left-0"
+                  )}>
+                    {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
+                  </div>
                 </div>
                 <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mt-1.5 px-1">
                   {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
@@ -183,8 +194,8 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
           placeholder="Type a secure message..."
           className="h-12 bg-white border-border rounded-xl focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/50 uppercase text-xs font-bold tracking-widest"
         />
-        <Button type="submit" size="icon" className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-sm">
-          <Send className="w-4 h-4" />
+        <Button type="submit" size="icon" disabled={isSending || !sharedKey} className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-sm">
+          {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </form>
     </div>

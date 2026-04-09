@@ -7,11 +7,20 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { GameSession, MatchHistory, OperationType } from '../types';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription
+} from "../components/ui/dialog";
+import { UserProfile, GameSession, MatchHistory, OperationType } from '../types';
 import ChatComponent from '../components/Chat';
 import VoiceChat from '../components/VoiceChat';
 import { toast } from 'sonner';
-import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from '../components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -23,6 +32,10 @@ export default function Game() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const navigate = useNavigate();
   const userId = auth.currentUser?.uid;
+
+  const [isRulesOpen, setIsRulesOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
 
   // Sound Effects
   const moveSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'));
@@ -328,19 +341,26 @@ export default function Game() {
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <Button 
             variant="ghost" 
-            onClick={() => window.close()} 
+            onClick={() => setIsExitConfirmOpen(true)} 
             className="gap-2 text-muted-foreground hover:text-foreground rounded-xl font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
-            Close
+            Exit
           </Button>
           <div className="text-center">
             <h1 className="font-black text-xl tracking-tighter uppercase text-foreground">WANGKOII</h1>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">vs @{opponentUsername}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsRulesOpen(true)}
+              className="rounded-xl text-muted-foreground hover:text-primary"
+            >
+              <Info className="w-5 h-5" />
+            </Button>
             <VoiceChat opponentUid={opponentId!} />
-            <div className="w-10" />
           </div>
         </div>
       </header>
@@ -473,7 +493,10 @@ export default function Game() {
                       {game.winner === 'draw' ? "Nobody wins" : (game.winner === userId ? "You won" : "You lost")}
                     </p>
                   </div>
-                  <Button onClick={resetGame} className="w-full h-12 gap-3 text-sm font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90 rounded-xl shadow-sm">
+                  <Button 
+                    onClick={() => setIsResetConfirmOpen(true)} 
+                    className="w-full h-12 gap-3 text-sm font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90 rounded-xl shadow-sm"
+                  >
                     <RotateCcw className="w-4 h-4" />
                     Rematch
                   </Button>
@@ -565,6 +588,80 @@ export default function Game() {
           </Tabs>
         </div>
       </main>
+
+      {/* Rules Modal */}
+      <Dialog open={isRulesOpen} onOpenChange={setIsRulesOpen}>
+        <DialogContent className="bg-white border-border rounded-2xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">Game Rules</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-primary uppercase tracking-widest">Objective</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Be the first to get <span className="font-bold text-foreground">3 marks in a row</span> (horizontally, vertically, or diagonally).
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-primary uppercase tracking-widest">How to Play</p>
+              <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
+                <li>Players take turns placing their mark (X or O) in an empty square.</li>
+                <li>X always goes first in the first round.</li>
+                <li>If all 9 squares are filled and no one has 3 in a row, it's a <span className="font-bold text-foreground">Draw</span>.</li>
+              </ul>
+            </div>
+          </div>
+          <Button onClick={() => setIsRulesOpen(false)} className="w-full rounded-xl font-bold uppercase tracking-widest text-xs h-11">
+            Got it
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Confirmation */}
+      <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+        <DialogContent className="bg-white border-border rounded-2xl max-w-xs">
+          <DialogHeader className="items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <RotateCcw className="w-6 h-6 text-primary" />
+            </div>
+            <DialogTitle className="text-lg font-black uppercase tracking-tight text-foreground">Reset Game?</DialogTitle>
+            <DialogDescription className="text-xs font-medium">
+              This will clear the current board and start a new round.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
+            <Button variant="ghost" onClick={() => setIsResetConfirmOpen(false)} className="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+              Cancel
+            </Button>
+            <Button onClick={() => { resetGame(); setIsResetConfirmOpen(false); }} className="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+              Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Exit Confirmation */}
+      <Dialog open={isExitConfirmOpen} onOpenChange={setIsExitConfirmOpen}>
+        <DialogContent className="bg-white border-border rounded-2xl max-w-xs">
+          <DialogHeader className="items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <DialogTitle className="text-lg font-black uppercase tracking-tight text-foreground">Exit Game?</DialogTitle>
+            <DialogDescription className="text-xs font-medium">
+              Are you sure you want to leave? The game session will remain active in your dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
+            <Button variant="ghost" onClick={() => setIsExitConfirmOpen(false)} className="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+              Stay
+            </Button>
+            <Button variant="destructive" onClick={() => navigate('/')} className="flex-1 rounded-xl font-bold uppercase tracking-widest text-[10px]">
+              Exit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

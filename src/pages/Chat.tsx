@@ -46,7 +46,7 @@ export default function ChatPage() {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => window.close()}
+              onClick={() => navigate(-1)}
               className="rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-6 h-6" />

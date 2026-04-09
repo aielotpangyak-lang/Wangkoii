@@ -52,7 +52,7 @@ export default function Register() {
       // Use a transaction to ensure username uniqueness
       await runTransaction(db, async (transaction) => {
         const usernameDoc = await transaction.get(usernameRef);
-        if (usernameDoc.exists()) {
+        if (usernameDoc.exists() && usernameDoc.data()?.uid !== auth.currentUser!.uid) {
           throw new Error('Username is already taken.');
         }
 
@@ -73,7 +73,11 @@ export default function Register() {
       toast.success('Profile created with E2EE!');
       navigate('/');
     } catch (error: any) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+      if (error.message === 'Username is already taken.') {
+        toast.error(error.message);
+      } else {
+        handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+      }
     } finally {
       setLoading(false);
     }
