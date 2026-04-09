@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { ScrollArea } from '../components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, UserProfile, OperationType } from '../types';
 import { 
   getStoredKeyPair, 

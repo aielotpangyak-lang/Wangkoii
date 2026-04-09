@@ -3,7 +3,7 @@ import { doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, arrayUnion } fro
 import { db, auth } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
 import { OperationType } from '../types';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
 import { toast } from 'sonner';
 

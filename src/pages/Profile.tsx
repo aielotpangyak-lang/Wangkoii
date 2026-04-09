@@ -3,10 +3,10 @@ import { doc, onSnapshot, updateDoc, deleteDoc, runTransaction } from 'firebase/
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UserProfile, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../components/ui/dialog";
+} from "@/components/ui/dialog";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);

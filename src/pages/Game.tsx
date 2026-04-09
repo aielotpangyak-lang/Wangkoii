@@ -3,10 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot, updateDoc, serverTimestamp, addDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Dialog,
   DialogContent,
@@ -15,14 +15,14 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogDescription
-} from "../components/ui/dialog";
+} from "@/components/ui/dialog";
 import { UserProfile, GameSession, MatchHistory, OperationType } from '../types';
 import ChatComponent from '../components/Chat';
 import VoiceChat from '../components/VoiceChat';
 import { toast } from 'sonner';
 import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { Input } from '../components/ui/input';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Game() {
