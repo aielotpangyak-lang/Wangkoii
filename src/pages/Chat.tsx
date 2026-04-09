@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/Input';
