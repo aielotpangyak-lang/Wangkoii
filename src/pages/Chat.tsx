@@ -5,7 +5,7 @@ import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Input } from '@/components/ui/Input';
 import { Search, User, MessageSquare, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
