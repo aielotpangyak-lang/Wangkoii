@@ -11,7 +11,7 @@ import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { UserProfile, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';

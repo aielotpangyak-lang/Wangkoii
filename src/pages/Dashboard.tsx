@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc, upd
 import { auth, db } from '../firebase';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 

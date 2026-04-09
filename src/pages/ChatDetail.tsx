@@ -5,7 +5,7 @@ import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import { ArrowLeft, User, Phone, Video, MoreVertical } from 'lucide-react';
 import ChatComponent from '../components/Chat';
 import { motion } from 'motion/react';
