@@ -11,6 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { 
   Dialog,
@@ -18,11 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { UserProfile, Challenge, GameSession, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Search, User, Swords, Play, LogOut, UserCircle, Bot, ChevronDown, Gamepad2, Home, MessageSquare, X, Trophy, Trash2 } from 'lucide-react';
+import { Search, User, Swords, Play, LogOut, UserCircle, Bot, ChevronDown, Gamepad2, Home, MessageSquare, X, Trophy, Trash2, MoreVertical, Eye, UserPlus } from 'lucide-react';
 import { cn, handleFirestoreError } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -35,6 +37,7 @@ export default function Dashboard() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isBotModalOpen, setIsBotModalOpen] = useState(false);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [timerSetting, setTimerSetting] = useState<'15' | '30' | '60' | 'unlimited'>('unlimited');
   const navigate = useNavigate();
@@ -216,6 +219,11 @@ export default function Dashboard() {
   const openChallengeModal = (user: UserProfile) => {
     setSelectedUser(user);
     setIsChallengeModalOpen(true);
+  };
+
+  const openProfileModal = (user: UserProfile) => {
+    setSelectedUser(user);
+    setIsProfileModalOpen(true);
   };
 
   const acceptChallenge = async (challenge: Challenge) => {
@@ -509,7 +517,7 @@ export default function Dashboard() {
                     <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Search Results</p>
                     {filteredUsers.length > 0 ? (
                       filteredUsers.map(user => (
-                        <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 hover:bg-pink-50 transition-all">
+                        <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 hover:bg-pink-50 transition-all group">
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -524,9 +532,24 @@ export default function Dashboard() {
                               <p className="text-xs text-pink-400 font-medium">@{user.username}</p>
                             </div>
                           </div>
-                          <Button size="sm" className="rounded-xl bg-pink-600 text-white hover:bg-pink-700 font-bold" onClick={() => openChallengeModal(user)}>
-                            Challenge
-                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-white border-pink-100 rounded-xl shadow-xl">
+                              <DropdownMenuItem onClick={() => openChallengeModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                <Swords className="w-4 h-4" />
+                                Invite to Play
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openProfileModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                <Eye className="w-4 h-4" />
+                                View Profile
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       ))
                     ) : (
@@ -539,7 +562,7 @@ export default function Dashboard() {
                       <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Online Now</p>
                       <div className="grid gap-3">
                         {randomOnlinePlayers.map(user => (
-                          <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100">
+                          <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 group">
                             <div className="flex items-center gap-3">
                               <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -554,9 +577,24 @@ export default function Dashboard() {
                                 <p className="text-xs text-green-500 font-bold uppercase tracking-widest text-[8px]">Online</p>
                               </div>
                             </div>
-                            <Button size="sm" variant="outline" className="rounded-xl border-pink-200 text-pink-600 hover:bg-pink-50 font-bold" onClick={() => openChallengeModal(user)}>
-                              Play
-                            </Button>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100">
+                                  <MoreVertical className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-white border-pink-100 rounded-xl shadow-xl">
+                                <DropdownMenuItem onClick={() => openChallengeModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                  <Swords className="w-4 h-4" />
+                                  Invite to Play
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openProfileModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                  <Eye className="w-4 h-4" />
+                                  View Profile
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         ))}
                       </div>
@@ -648,6 +686,62 @@ export default function Dashboard() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Profile Info Modal */}
+      <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+        <DialogContent className="bg-white border-pink-100 text-pink-950 sm:max-w-sm rounded-3xl p-0 overflow-hidden soft-shadow">
+          {selectedUser && (
+            <div className="flex flex-col">
+              <div className="h-32 bg-pink-600 relative">
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                  <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-lg">
+                    <div className="w-full h-full rounded-2xl bg-pink-100 flex items-center justify-center overflow-hidden">
+                      {selectedUser.photoURL ? (
+                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : <User className="w-10 h-10 text-pink-400" />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-16 pb-8 px-8 text-center space-y-4">
+                <div>
+                  <h3 className="text-2xl font-black text-pink-900 uppercase tracking-tight">{selectedUser.name}</h3>
+                  <p className="text-sm text-pink-400 font-bold uppercase tracking-widest">@{selectedUser.username}</p>
+                </div>
+                
+                <div className="flex items-center justify-center gap-2">
+                  <Badge className={cn(
+                    "rounded-full px-3 py-1 font-bold text-[10px] uppercase tracking-widest border-none",
+                    selectedUser.isOnline ? "bg-green-100 text-green-600" : "bg-pink-50 text-pink-300"
+                  )}>
+                    {selectedUser.isOnline ? "Online Now" : "Offline"}
+                  </Badge>
+                </div>
+
+                <div className="pt-4 grid grid-cols-1 gap-2">
+                  <Button 
+                    className="w-full h-12 bg-pink-600 text-white hover:bg-pink-700 rounded-2xl font-black uppercase tracking-widest text-xs"
+                    onClick={() => {
+                      setIsProfileModalOpen(false);
+                      openChallengeModal(selectedUser);
+                    }}
+                  >
+                    <Swords className="w-4 h-4 mr-2" />
+                    Challenge Player
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="w-full h-12 border-pink-100 text-pink-600 hover:bg-pink-50 rounded-2xl font-black uppercase tracking-widest text-xs"
+                    onClick={() => setIsProfileModalOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
