@@ -1,0 +1,164 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (Auth UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - username: string (required, numerical + /)
+    //   - name: string (required)
+    //   - isOnline: bool (optional)
+    //   - lastSeen: timestamp (optional)
+    //
+    // Collection: challenges
+    // Document ID: auto-generated
+    // Fields:
+    //   - fromUid: string (required)
+    //   - fromUsername: string (required)
+    //   - toUid: string (required)
+    //   - status: string (pending, accepted, declined)
+    //   - gameType: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: games
+    // Document ID: auto-generated
+    // Fields:
+    //   - type: string (required)
+    //   - players: list<string> (required)
+    //   - playerUsernames: map (required)
+    //   - status: string (active, finished)
+    //   - board: list (optional)
+    //   - turn: string (optional)
+    //   - winner: string (optional)
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: matches
+    // Document ID: auto-generated
+    // Fields:
+    //   - players: list<string> (required)
+    //   - winner: string (optional)
+    //   - gameType: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isPlayer(players) {
+      return isAuthenticated() && request.auth.uid in players;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'username', 'name']) &&
+             data.uid is string &&
+             data.username is string &&
+             data.username.matches('^[a-z0-9]{6,20}$') &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 50;
+    }
+
+    function isValidChallenge(data) {
+      return data.keys().hasAll(['fromUid', 'fromUsername', 'toUid', 'status', 'gameType', 'createdAt']) &&
+             data.fromUid == request.auth.uid &&
+             data.status in ['pending', 'accepted', 'declined'];
+    }
+
+    function isValidGame(data) {
+      return data.keys().hasAll(['type', 'players', 'status', 'createdAt', 'updatedAt']) &&
+             data.players is list && data.players.size() == 2;
+    }
+
+    // Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
+                    getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == request.auth.uid;
+      allow update: if isOwner(userId) && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOnline', 'lastSeen', 'name', 'publicKey', 'photoURL']);
+      allow delete: if isOwner(userId);
+    }
+
+    // Usernames (Uniqueness)
+    match /usernames/{username} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+
+    // Chats
+    match /chats/{chatId}/messages/{messageId} {
+      // chatId is usually a combination of two UIDs sorted alphabetically
+      allow read: if isAuthenticated() && request.auth.uid in chatId.split('_');
+      allow create: if isAuthenticated() && 
+                    request.auth.uid == request.resource.data.senderUid &&
+                    request.auth.uid in chatId.split('_');
+    }
+
+    // Challenges
+    match /challenges/{challengeId} {
+      allow read: if isAuthenticated() && 
+                    (('fromUid' in resource.data && resource.data.fromUid == request.auth.uid) || 
+                     ('toUid' in resource.data && resource.data.toUid == request.auth.uid));
+      allow create: if isAuthenticated() && isValidChallenge(request.resource.data);
+      allow update: if isAuthenticated() && 
+                    (('fromUid' in resource.data && resource.data.fromUid == request.auth.uid) || 
+                     ('toUid' in resource.data && resource.data.toUid == request.auth.uid)) &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+      allow delete: if isAuthenticated() && 
+                    (('fromUid' in resource.data && resource.data.fromUid == request.auth.uid) || 
+                     ('toUid' in resource.data && resource.data.toUid == request.auth.uid));
+    }
+
+    // Games
+    match /games/{gameId} {
+      allow read: if isAuthenticated() && 
+                    'players' in resource.data && 
+                    request.auth.uid in resource.data.players;
+      allow create: if isAuthenticated() && 
+                    'players' in request.resource.data && 
+                    request.auth.uid in request.resource.data.players && 
+                    isValidGame(request.resource.data);
+      allow update: if isAuthenticated() && 
+                    'players' in resource.data && 
+                    request.auth.uid in resource.data.players && 
+                    isValidGame(request.resource.data);
+      allow delete: if isAuthenticated() && 
+                    'players' in resource.data && 
+                    request.auth.uid in resource.data.players;
+    }
+
+    // Matches (History)
+    match /matches/{matchId} {
+      allow read: if isAuthenticated() && 
+                    'players' in resource.data && 
+                    request.auth.uid in resource.data.players;
+      allow create: if isAuthenticated() && 
+                    'players' in request.resource.data && 
+                    request.auth.uid in request.resource.data.players;
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read, delete: if isAuthenticated() && 
+                          'toUid' in resource.data && 
+                          resource.data.toUid == request.auth.uid;
+      allow create: if isAuthenticated();
+    }
+
+    // Calls
+    match /calls/{callId} {
+      allow read, write: if isAuthenticated() && request.auth.uid in callId.split('_');
+    }
+  }
+}

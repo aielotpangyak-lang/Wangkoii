@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and status information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "username": { "type": "string", "description": "Numerical username with optional slash" },
+        "name": { "type": "string", "description": "Display name" },
+        "isOnline": { "type": "boolean", "description": "Current online status" },
+        "lastSeen": { "type": "string", "format": "date-time", "description": "Last activity timestamp" },
+        "publicKey": { "type": "string", "description": "Public key for E2EE (base64)" },
+        "photoURL": { "type": "string", "description": "Profile picture URL" }
+      },
+      "required": ["uid", "username", "name"]
+    },
+    "Challenge": {
+      "title": "Challenge",
+      "description": "A game challenge between two players",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string" },
+        "fromUsername": { "type": "string" },
+        "toUid": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "gameType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "toUid", "status", "gameType", "createdAt"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "Active game session",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "players": { "type": "array", "items": { "type": "string" } },
+        "playerUsernames": { "type": "object" },
+        "status": { "type": "string", "enum": ["active", "finished"] },
+        "board": { "type": "array" },
+        "turn": { "type": "string" },
+        "winner": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "players", "status", "createdAt", "updatedAt"]
+    },
+    "MatchHistory": {
+      "title": "MatchHistory",
+      "description": "Historical record of a completed match",
+      "type": "object",
+      "properties": {
+        "players": { "type": "array", "items": { "type": "string" } },
+        "winner": { "type": "string" },
+        "gameType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["players", "gameType", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Encrypted chat message",
+      "type": "object",
+      "properties": {
+        "senderUid": { "type": "string" },
+        "receiverUid": { "type": "string" },
+        "encryptedText": { "type": "string" },
+        "iv": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderUid", "receiverUid", "encryptedText", "iv", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/usernames/{username}": { "schema": { "type": "object", "properties": { "uid": { "type": "string" } } }, "description": "Username uniqueness tracker" },
+    "/challenges/{challengeId}": { "schema": "Challenge", "description": "Active challenges" },
+    "/games/{gameId}": { "schema": "Game", "description": "Active game sessions" },
+    "/matches/{matchId}": { "schema": "MatchHistory", "description": "Completed match history" },
+    "/chats/{chatId}/messages/{messageId}": { "schema": "Message", "description": "Encrypted messages" },
+    "/notifications/{notificationId}": { 
+      "schema": {
+        "type": "object",
+        "properties": {
+          "toUid": { "type": "string" },
+          "fromName": { "type": "string" },
+          "type": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }, 
+      "description": "System notifications" 
+    },
+    "/calls/{callId}": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "offer": { "type": "string" },
+          "answer": { "type": "string" },
+          "candidates": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "description": "WebRTC signaling"
+    }
+  }
+}

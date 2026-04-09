@@ -1,0 +1,5 @@
+{
+  "name": "Wangkoii",
+  "description": "A private multiplayer game platform for you and your friend, featuring Tic-Tac-Toe and real-time status.",
+  "requestFramePermissions": ["microphone"]
+}
