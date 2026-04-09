@@ -4,7 +4,7 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc,
 import { auth, db } from '../firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { ArrowLeft, CheckCircle2, Settings, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 

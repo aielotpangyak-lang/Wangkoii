@@ -6,7 +6,7 @@ import { handleFirestoreError } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { Search, User, MessageSquare, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChatComponent from '../components/Chat';

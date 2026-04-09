@@ -22,7 +22,7 @@ import VoiceChat from '../components/VoiceChat';
 import { toast } from 'sonner';
 import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Game() {
