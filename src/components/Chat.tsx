@@ -3,7 +3,7 @@ import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp 
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/Input';
+import { Input } from '@/components/ui/InputTemp';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Message, OperationType } from '../types';
 import { Send, Lock, ShieldCheck, Bot } from 'lucide-react';
