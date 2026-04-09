@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,6 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function ChatPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
   const userId = auth.currentUser?.uid;
@@ -39,115 +38,83 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="min-h-screen text-foreground relative overflow-hidden font-sans">
-      <div className="relative z-10 max-w-6xl mx-auto h-screen flex flex-col p-4 md:p-6">
-        <header className="flex items-center justify-between mb-6 shrink-0">
+    <div className="min-h-screen text-foreground relative overflow-hidden font-sans bg-muted/10">
+      <div className="relative z-10 max-w-2xl mx-auto min-h-screen flex flex-col p-4 md:p-8">
+        <header className="flex items-center justify-between mb-8 shrink-0">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-6 h-6" />
             </Button>
             <div>
-              <h1 className="text-2xl font-black tracking-tight text-foreground uppercase">MESSAGES</h1>
+              <h1 className="text-3xl font-black tracking-tighter text-foreground uppercase">MESSAGES</h1>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Minimal Communication</p>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col md:flex-row gap-6 overflow-hidden">
-          {/* User List Sidebar */}
-          <Card className="w-full md:w-80 bg-white border-border flex flex-col overflow-hidden rounded-2xl shadow-sm">
-            <CardHeader className="p-4 border-b border-border">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                <Input 
-                  placeholder="Search friends..." 
-                  className="pl-11 bg-muted/50 border-border h-11 rounded-xl focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/50"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
-                <div className="p-2 space-y-1">
-                  {filteredUsers.map(user => (
-                    <button
-                      key={user.uid}
-                      onClick={() => setSelectedUser(user)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                        selectedUser?.uid === user.uid 
-                          ? 'bg-primary text-white' 
-                          : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <div className="relative shrink-0">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                          selectedUser?.uid === user.uid ? 'bg-white/20' : 'bg-muted'
-                        }`}>
-                          {user.photoURL ? (
-                            <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          ) : <User className={`w-5 h-5 ${selectedUser?.uid === user.uid ? 'text-white' : 'text-muted-foreground'}`} />}
-                        </div>
+        <div className="space-y-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
+            <Input 
+              placeholder="Search players..." 
+              className="pl-12 bg-white border-border h-14 rounded-2xl focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/50 shadow-sm text-lg font-medium"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2 mb-4">Recent Conversations</p>
+            
+            {filteredUsers.length > 0 ? (
+              <div className="grid gap-2">
+                {filteredUsers.map(user => (
+                  <motion.button
+                    key={user.uid}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => navigate(`/chat/${user.uid}`)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white border border-border hover:border-primary/30 transition-all shadow-sm group"
+                  >
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border border-border group-hover:border-primary/20 transition-colors">
+                        {user.photoURL ? (
+                          <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : <User className="w-6 h-6 text-muted-foreground" />}
+                      </div>
+                      {user.isOnline && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
+                      )}
+                    </div>
+                    
+                    <div className="text-left flex-1 overflow-hidden">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className="font-black text-lg text-foreground truncate">{user.name}</p>
                         {user.isOnline && (
-                          <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 rounded-full ${
-                            selectedUser?.uid === user.uid ? 'bg-green-400 border-primary' : 'bg-green-500 border-white'
-                          }`} />
+                          <span className="text-[8px] font-black text-green-500 uppercase tracking-widest bg-green-50 px-2 py-0.5 rounded-full">Active</span>
                         )}
                       </div>
-                      <div className="text-left overflow-hidden">
-                        <p className="font-bold text-sm truncate">{user.name}</p>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest truncate ${selectedUser?.uid === user.uid ? 'text-white/70' : 'text-muted-foreground/70'}`}>
-                          @{user.username}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          {/* Chat Area */}
-          <Card className="flex-1 bg-white border-border flex flex-col overflow-hidden rounded-2xl shadow-sm">
-            {selectedUser ? (
-              <div className="flex flex-col h-full">
-                <div className="p-4 border-b border-border flex items-center justify-between bg-muted/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden">
-                      {selectedUser.photoURL ? (
-                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      ) : <User className="w-5 h-5 text-muted-foreground" />}
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-foreground">{selectedUser.name}</p>
-                      <p className={`text-[10px] font-bold uppercase tracking-widest ${selectedUser.isOnline ? 'text-green-500' : 'text-muted-foreground'}`}>
-                        {selectedUser.isOnline ? 'Online Now' : 'Offline'}
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                        @{user.username}
                       </p>
                     </div>
-                  </div>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  <ChatComponent 
-                    opponentUid={selectedUser.uid} 
-                    opponentName={selectedUser.name} 
-                  />
-                </div>
+                  </motion.button>
+                ))}
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-6">
-                  <MessageSquare className="w-10 h-10 text-muted-foreground/30" />
+              <div className="py-20 text-center space-y-4">
+                <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto">
+                  <MessageSquare className="w-8 h-8 text-muted-foreground/30" />
                 </div>
-                <h3 className="text-xl font-black tracking-tight text-foreground uppercase mb-2">Conversations</h3>
-                <p className="text-muted-foreground font-medium text-sm max-w-xs">Select a friend from the sidebar to start a secure chat.</p>
+                <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">No conversations found</p>
               </div>
             )}
-          </Card>
+          </div>
         </div>
       </div>
     </div>

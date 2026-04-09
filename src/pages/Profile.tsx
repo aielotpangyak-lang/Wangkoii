@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { 
+  reauthenticateWithPopup, 
+  GoogleAuthProvider, 
+  OAuthProvider 
+} from 'firebase/auth';
 import { doc, onSnapshot, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../firebase';
@@ -6,7 +11,7 @@ import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { UserProfile, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -110,22 +115,53 @@ export default function Profile() {
       const uid = user.uid;
       const username = profile.username;
 
-      // 1. Delete Firestore data first
-      // We do this individually to avoid transaction issues if one fails
-      await deleteDoc(doc(db, 'users', uid));
-      await deleteDoc(doc(db, 'usernames', username));
+      // Function to perform the actual deletion
+      const performDeletion = async () => {
+        // 1. Delete Firestore data first
+        await deleteDoc(doc(db, 'users', uid));
+        await deleteDoc(doc(db, 'usernames', username));
 
-      // 2. Delete Auth User
-      await user.delete();
+        // 2. Delete Auth User
+        await user.delete();
 
-      toast.success('Account deleted successfully.');
-      window.location.href = '/login';
+        toast.success('Account deleted successfully.');
+        window.location.href = '/login';
+      };
+
+      try {
+        await performDeletion();
+      } catch (error: any) {
+        if (error.code === 'auth/requires-recent-login') {
+          // Attempt re-authentication
+          const providerId = user.providerData[0]?.providerId;
+          let provider;
+          
+          if (providerId === 'google.com') {
+            provider = new GoogleAuthProvider();
+          } else if (providerId === 'apple.com') {
+            provider = new OAuthProvider('apple.com');
+          }
+
+          if (provider) {
+            toast.info('For security, please re-authenticate to delete your account.');
+            await reauthenticateWithPopup(user, provider);
+            // Retry deletion after successful re-auth
+            await performDeletion();
+          } else {
+            throw error; // Fallback to manual sign-out if no provider found
+          }
+        } else {
+          throw error;
+        }
+      }
     } catch (error: any) {
       console.error('Delete account error:', error);
       if (error.code === 'auth/requires-recent-login') {
         toast.error('Please sign out and sign in again to delete your account for security reasons.');
+      } else if (error.code === 'auth/user-cancelled' || error.code === 'auth/popup-closed-by-user') {
+        toast.error('Deletion cancelled: Re-authentication required.');
       } else {
-        toast.error('Failed to delete account: ' + error.message);
+        toast.error('Failed to delete account: ' + (error.message || 'Unknown error'));
       }
     } finally {
       setDeleteLoading(false);
@@ -211,6 +247,16 @@ export default function Profile() {
                   {loading ? 'Saving...' : 'Update Profile'}
                 </Button>
                 
+                {auth.currentUser?.email === 'aielotpangyak@gmail.com' && (
+                  <Button 
+                    type="button"
+                    onClick={() => navigate('/admin')}
+                    className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-sm"
+                  >
+                    Admin Panel
+                  </Button>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <Button 
                     type="button" 

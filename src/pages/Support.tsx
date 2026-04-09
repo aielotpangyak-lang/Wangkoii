@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Coffee, Smartphone, QrCode, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Coffee, Smartphone, QrCode, CheckCircle2, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import { auth, db } from '../firebase';
+import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 const PRESET_AMOUNTS = [20, 50, 100, 200];
 const MIN_AMOUNT = 10;
@@ -16,10 +18,25 @@ const UPI_ID = 'aielot@airtel';
 export default function SupportPage() {
   const [amount, setAmount] = useState<string>('50');
   const [showPayment, setShowPayment] = useState(false);
+  const [utr, setUtr] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [userName, setUserName] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (auth.currentUser) {
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setUserName(userDoc.data().name);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+
   const handleAmountChange = (val: string) => {
-    // Only allow numbers
     if (val !== '' && !/^\d+$/.test(val)) return;
     setAmount(val);
   };
@@ -28,6 +45,31 @@ export default function SupportPage() {
   const isValid = currentAmount >= MIN_AMOUNT && currentAmount <= MAX_AMOUNT;
 
   const upiLink = `upi://pay?pa=${UPI_ID}&pn=Wangkoii&am=${currentAmount}&cu=INR`;
+
+  const submitUtr = async () => {
+    if (!utr.trim() || utr.length < 6) {
+      toast.error("Please enter a valid UTR/Reference number");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'payments'), {
+        uid: auth.currentUser?.uid || 'anonymous',
+        name: userName || 'Anonymous',
+        amount: currentAmount,
+        utr: utr,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      setSubmitted(true);
+      toast.success("Payment details submitted successfully!");
+    } catch (error) {
+      toast.error("Failed to submit payment details.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen text-foreground relative overflow-hidden font-sans">
@@ -61,7 +103,9 @@ export default function SupportPage() {
                     <Coffee className="w-8 h-8 text-primary" />
                   </div>
                   <CardTitle className="text-2xl font-black text-foreground uppercase tracking-tight">Buy me a chai</CardTitle>
-                  <p className="text-muted-foreground font-medium px-8 text-sm">Your support helps me maintain and add new features to Wangkoii!</p>
+                  <p className="text-muted-foreground font-medium px-8 text-sm">
+                    {userName ? `Hey ${userName}, your support helps me maintain Wangkoii!` : "Your support helps me maintain Wangkoii!"}
+                  </p>
                 </CardHeader>
                 <CardContent className="px-8 pb-10 space-y-8">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -100,15 +144,38 @@ export default function SupportPage() {
                     )}
                   </div>
 
-                  <Button
-                    disabled={!isValid}
-                    onClick={() => setShowPayment(true)}
-                    className="w-full h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg uppercase tracking-widest shadow-sm disabled:opacity-50"
-                  >
-                    Proceed to Pay ₹{currentAmount || 0}
-                  </Button>
+                  <div className="pt-4 grid grid-cols-1 gap-3">
+                    <Button
+                      disabled={!isValid}
+                      onClick={() => setShowPayment(true)}
+                      className="w-full h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-lg uppercase tracking-widest shadow-sm disabled:opacity-50"
+                    >
+                      Go Pay ₹{currentAmount || 0}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
+            </motion.div>
+          ) : submitted ? (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-6 py-12"
+            >
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-12 h-12 text-green-600" />
+              </div>
+              <h2 className="text-3xl font-black uppercase tracking-tighter text-foreground">We're checking it</h2>
+              <p className="text-muted-foreground font-medium max-w-sm mx-auto">
+                Thank you for trusting us, {userName}! Your payment reference is being verified. You will receive a notification once approved.
+              </p>
+              <Button 
+                onClick={() => navigate('/')}
+                className="mt-8 h-12 px-8 rounded-xl bg-primary text-white font-bold uppercase tracking-widest"
+              >
+                Back to Game
+              </Button>
             </motion.div>
           ) : (
             <motion.div
@@ -119,11 +186,11 @@ export default function SupportPage() {
               className="space-y-6"
             >
               <Card className="bg-white border-border rounded-3xl shadow-lg overflow-hidden text-center">
-                <CardHeader className="pt-10 pb-6">
-                  <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Scan to Pay</h3>
-                  <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Amount: ₹{currentAmount}</p>
+                <CardHeader className="pt-10 pb-6 bg-muted/10 border-b border-border">
+                  <h3 className="text-xl font-black text-foreground uppercase tracking-tight">Notice Board</h3>
+                  <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest">Scan QR or Tap to Pay directly</p>
                 </CardHeader>
-                <CardContent className="px-8 pb-10 flex flex-col items-center gap-8">
+                <CardContent className="px-8 py-8 flex flex-col items-center gap-8">
                   <div className="p-4 bg-white rounded-2xl shadow-sm border border-border">
                     <QRCodeSVG 
                       value={upiLink} 
@@ -135,39 +202,47 @@ export default function SupportPage() {
                   </div>
                   
                   <div className="w-full space-y-4">
-                    <div className="flex items-center gap-4 text-left p-4 bg-muted/30 rounded-2xl border border-border">
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 border border-border">
-                        <QrCode className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">UPI ID</p>
-                        <p className="font-bold text-foreground text-sm">{UPI_ID}</p>
-                      </div>
-                    </div>
-
                     <a 
                       href={upiLink}
                       className="w-full h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black text-base flex items-center justify-center gap-3 shadow-sm transition-all active:scale-95 uppercase tracking-widest"
                     >
                       <Smartphone className="w-5 h-5" />
-                      Open UPI App
+                      Tap to Pay Directly
                     </a>
+
+                    <div className="pt-6 border-t border-border space-y-4">
+                      <div className="text-left space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Submit UTR / Reference Number</label>
+                        <Input
+                          value={utr}
+                          onChange={(e) => setUtr(e.target.value)}
+                          placeholder="Enter 12-digit UTR number"
+                          className="h-14 bg-muted/30 border-border rounded-xl text-sm font-bold text-foreground focus:ring-primary/20"
+                        />
+                      </div>
+                      <Button
+                        onClick={submitUtr}
+                        disabled={isSubmitting || !utr.trim()}
+                        className="w-full h-14 rounded-2xl bg-foreground text-background hover:bg-foreground/90 font-black text-sm flex items-center justify-center gap-2 shadow-sm uppercase tracking-widest"
+                      >
+                        {isSubmitting ? "Submitting..." : (
+                          <>
+                            Submit UTR <Send className="w-4 h-4 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
 
                     <Button
                       variant="ghost"
                       onClick={() => setShowPayment(false)}
-                      className="w-full text-muted-foreground font-bold hover:text-foreground uppercase text-[10px] tracking-widest rounded-xl"
+                      className="w-full text-muted-foreground font-bold hover:text-foreground uppercase text-[10px] tracking-widest rounded-xl mt-4"
                     >
                       Change Amount
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-
-              <div className="bg-muted/30 border border-border p-4 rounded-2xl flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-primary" />
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Secure UPI Payment via trusted apps</p>
-              </div>
             </motion.div>
           )}
         </AnimatePresence>

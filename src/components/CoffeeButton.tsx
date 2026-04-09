@@ -10,8 +10,7 @@ export default function CoffeeButton() {
   return (
     <motion.div
       drag
-      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-      dragElastic={1}
+      dragMomentum={false}
       className="fixed bottom-24 right-6 z-50 flex items-center cursor-grab active:cursor-grabbing"
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
@@ -19,7 +18,7 @@ export default function CoffeeButton() {
     >
       <div className="flex items-center bg-white border border-border rounded-2xl shadow-lg overflow-hidden">
         <button
-          onClick={() => window.open('/support', '_blank')}
+          onClick={() => navigate('/support')}
           className="flex items-center gap-3 p-3 hover:bg-muted transition-colors"
         >
           <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm shrink-0">

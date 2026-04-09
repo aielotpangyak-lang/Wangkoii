@@ -1,7 +1,7 @@
 import { signInWithPopup, OAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Gamepad2, Apple } from 'lucide-react';

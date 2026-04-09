@@ -160,5 +160,18 @@ service cloud.firestore {
     match /calls/{callId} {
       allow read, write: if isAuthenticated() && request.auth.uid in callId.split('_');
     }
+
+    // Settings
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'aielotpangyak@gmail.com';
+    }
+
+    // Payments
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && request.auth.token.email == 'aielotpangyak@gmail.com';
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.token.email == 'aielotpangyak@gmail.com';
+    }
   }
 }

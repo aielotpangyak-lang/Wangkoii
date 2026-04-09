@@ -4,7 +4,7 @@ import { doc, onSnapshot, updateDoc, serverTimestamp, addDoc, collection, query,
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -449,7 +449,7 @@ export default function Game() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-border shadow-sm w-full max-w-[400px] aspect-square">
+          <div className="relative grid grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-border shadow-sm w-full max-w-[400px] aspect-square">
             {game.board?.map((cell, i) => (
               <motion.button
                 key={i}
@@ -475,16 +475,14 @@ export default function Game() {
                 ) : ''}
               </motion.button>
             ))}
-          </div>
 
-          {game.status === 'finished' && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="w-full max-w-md"
-            >
-              <Card className="bg-white text-foreground border border-border shadow-lg rounded-2xl overflow-hidden">
-                <CardContent className="pt-8 text-center space-y-6">
+            {game.status === 'finished' && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-2xl"
+              >
+                <div className="bg-white text-foreground border border-border shadow-2xl rounded-2xl p-8 text-center space-y-6 max-w-[80%] w-full">
                   <div className="mx-auto bg-muted p-4 rounded-xl w-fit">
                     <Trophy className="w-10 h-10 text-primary" />
                   </div>
@@ -503,10 +501,10 @@ export default function Game() {
                     <RotateCcw className="w-4 h-4" />
                     Rematch
                   </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                </div>
+              </motion.div>
+            )}
+          </div>
 
           <div className="w-full max-w-[400px] mt-4">
             <form onSubmit={sendQuickChat} className="flex gap-2">

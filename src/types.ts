@@ -81,7 +81,6 @@ export interface Message {
   id: string;
   senderUid: string;
   receiverUid: string;
-  encryptedText: string;
-  iv: string;
+  text: string;
   createdAt: any;
 }

@@ -3,7 +3,7 @@ import { collection, query, where, onSnapshot, addDoc, serverTimestamp, doc, upd
 import { auth, db } from '../firebase';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [isBotModalOpen, setIsBotModalOpen] = useState(false);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [timerSetting, setTimerSetting] = useState<'15' | '30' | '60' | 'unlimited'>('unlimited');
   const navigate = useNavigate();
@@ -266,6 +267,18 @@ export default function Dashboard() {
       toast.error('Failed to decline challenge');
     }
   };
+
+  useEffect(() => {
+    if (search) {
+      setIsSearching(true);
+      const timer = setTimeout(() => {
+        setIsSearching(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    } else {
+      setIsSearching(false);
+    }
+  }, [search]);
 
   const filteredUsers = users.filter(u => 
     u.username.toLowerCase().includes(search.toLowerCase()) || 
@@ -504,10 +517,15 @@ export default function Dashboard() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-300" />
               <Input 
                 placeholder="Search by username..." 
-                className="pl-11 bg-pink-50/50 border-pink-100 h-12 rounded-2xl focus:ring-pink-200 text-pink-900 placeholder:text-pink-300"
+                className="pl-11 pr-11 bg-pink-50/50 border-pink-100 h-12 rounded-2xl focus:ring-pink-200 text-pink-900 placeholder:text-pink-300"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {isSearching && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin" />
+                </div>
+              )}
             </div>
 
             <ScrollArea className="h-[400px] pr-4">
@@ -543,6 +561,10 @@ export default function Dashboard() {
                               <DropdownMenuItem onClick={() => openChallengeModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
                                 <Swords className="w-4 h-4" />
                                 Invite to Play
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(`/chat/${user.uid}`)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                <MessageSquare className="w-4 h-4" />
+                                Send Message
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => openProfileModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
                                 <Eye className="w-4 h-4" />
@@ -588,6 +610,10 @@ export default function Dashboard() {
                                 <DropdownMenuItem onClick={() => openChallengeModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
                                   <Swords className="w-4 h-4" />
                                   Invite to Play
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/chat/${user.uid}`)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                  <MessageSquare className="w-4 h-4" />
+                                  Send Message
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openProfileModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
                                   <Eye className="w-4 h-4" />
@@ -730,6 +756,17 @@ export default function Dashboard() {
                   >
                     <Swords className="w-4 h-4 mr-2" />
                     Challenge Player
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="w-full h-12 border-pink-100 text-pink-600 hover:bg-pink-50 rounded-2xl font-black uppercase tracking-widest text-xs"
+                    onClick={() => {
+                      setIsProfileModalOpen(false);
+                      navigate(`/chat/${selectedUser.uid}`);
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Send Message
                   </Button>
                   <Button 
                     variant="outline"

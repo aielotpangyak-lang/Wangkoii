@@ -5,7 +5,7 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import React, { useEffect } from 'react';
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Toaster } from './components/ui/sonner';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -15,7 +15,9 @@ import Dashboard from './pages/Dashboard';
 import Game from './pages/Game';
 import Profile from './pages/Profile';
 import ChatPage from './pages/Chat';
+import ChatDetail from './pages/ChatDetail';
 import SupportPage from './pages/Support';
+import AdminPage from './pages/Admin';
 import NetworkStatus from './components/NetworkStatus';
 import CoffeeButton from './components/CoffeeButton';
 
@@ -41,6 +43,30 @@ export default function App() {
 
 function AppContent() {
   const { user, profile } = useAuth();
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.font) {
+          const linkId = 'dynamic-font-link';
+          let link = document.getElementById(linkId) as HTMLLinkElement;
+          if (!link) {
+            link = document.createElement('link');
+            link.id = linkId;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+          }
+          link.href = `https://fonts.googleapis.com/css2?family=${data.font.replace(/ /g, '+')}:wght@400;500;700;900&display=swap`;
+          document.body.style.fontFamily = `"${data.font}", sans-serif`;
+        }
+        if (data.appName) {
+          document.title = data.appName;
+        }
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = async () => {
@@ -109,9 +135,19 @@ function AppContent() {
               <ChatPage />
             </AuthGuard>
           } />
+          <Route path="/chat/:uid" element={
+            <AuthGuard>
+              <ChatDetail />
+            </AuthGuard>
+          } />
           <Route path="/support" element={
             <AuthGuard>
               <SupportPage />
+            </AuthGuard>
+          } />
+          <Route path="/admin" element={
+            <AuthGuard>
+              <AdminPage />
             </AuthGuard>
           } />
         </Routes>

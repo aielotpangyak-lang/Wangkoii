@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Message, UserProfile, OperationType } from '../types';
-import { 
-  getStoredKeyPair, 
-  importPublicKey, 
-  deriveSharedSecret, 
-  encryptMessage, 
-  decryptMessage 
-} from '../lib/cryptoUtils';
+import { Message, OperationType } from '../types';
 import { Send, Lock, ShieldCheck, Bot } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -23,9 +16,8 @@ interface ChatProps {
 }
 
 export default function Chat({ opponentUid, opponentName }: ChatProps) {
-  const [messages, setMessages] = useState<(Message & { text?: string })[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
-  const [sharedKey, setSharedKey] = useState<CryptoKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,92 +28,56 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
     : null;
 
   useEffect(() => {
-    if (!userId || !opponentUid || opponentUid === 'bot') {
+    if (!chatId) {
       setLoading(false);
       return;
     }
-
-    const setupEncryption = async () => {
-      try {
-        const myKeys = await getStoredKeyPair();
-        if (!myKeys) {
-          toast.error("E2EE keys not found. Please re-register or check settings.");
-          return;
-        }
-
-        const opponentDoc = await getDoc(doc(db, 'users', opponentUid));
-        const opponentData = opponentDoc.data() as UserProfile;
-        
-        if (!opponentData.publicKey) {
-          toast.error("Opponent hasn't set up E2EE keys yet.");
-          return;
-        }
-
-        const opponentPubKey = await importPublicKey(opponentData.publicKey);
-        const derivedKey = await deriveSharedSecret(myKeys.privateKey, opponentPubKey);
-        setSharedKey(derivedKey);
-      } catch (err) {
-        console.error("Encryption setup failed:", err);
-        toast.error("Failed to setup secure chat.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    setupEncryption();
-  }, [userId, opponentUid]);
-
-  useEffect(() => {
-    if (!chatId || !sharedKey) return;
 
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'asc'), limit(50));
 
     const path = `chats/${chatId}/messages`;
-    const unsub = onSnapshot(q, async (snapshot) => {
-      const newMessages = await Promise.all(snapshot.docs.map(async (doc) => {
-        const data = doc.data() as Message;
-        let decryptedText = "[Encrypted Message]";
-        try {
-          decryptedText = await decryptMessage(data.encryptedText, data.iv, sharedKey);
-        } catch (err) {
-          console.error("Decryption failed for message:", doc.id);
-        }
-        return { id: doc.id, ...data, text: decryptedText };
-      }));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const newMessages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      } as Message));
+      
       setMessages(newMessages);
+      setLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }, (error) => handleFirestoreError(error, OperationType.GET, path));
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+      setLoading(false);
+    });
 
     return () => unsub();
-  }, [chatId, sharedKey]);
+  }, [chatId]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || !sharedKey || !chatId || !userId || isSending) return;
+    if (!inputText.trim() || !chatId || !userId || isSending) return;
 
     const text = inputText;
     setInputText('');
     setIsSending(true);
 
     try {
-      const { encrypted, iv } = await encryptMessage(text, sharedKey);
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         senderUid: userId,
         receiverUid: opponentUid,
-        encryptedText: encrypted,
-        iv: iv,
+        text: text,
         createdAt: serverTimestamp()
       });
     } catch (err) {
-      toast.error("Failed to send encrypted message.");
+      toast.error("Failed to send message.");
       setInputText(text); // Restore text on failure
     } finally {
       setIsSending(false);
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Initializing secure chat...</div>;
+  if (loading) return <div className="p-8 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Loading messages...</div>;
 
   if (opponentUid === 'bot') {
     return (
@@ -140,19 +96,19 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
       <div className="p-4 border-b border-border bg-muted/30 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-primary" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Secure Chat</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Private Chat</span>
         </div>
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold">
           <Lock className="w-3 h-3" />
-          E2EE
+          Secure
         </div>
       </div>
 
       <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {messages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">No messages yet. Say hi securely!</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">No messages yet. Say hi!</p>
             </div>
           ) : (
             messages.map((msg) => (
@@ -160,7 +116,7 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
                 key={msg.id} 
                 className={cn(
                   "flex flex-col max-w-[85%]",
-                  msg.senderUid === userId ? "ml-auto items-end" : "mr-auto items-start"
+                  msg.senderUid === userId ? "self-end items-end" : "self-start items-start"
                 )}
               >
                 <div className={cn(
@@ -191,10 +147,10 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
         <Input 
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Type a secure message..."
+          placeholder="Type a message..."
           className="h-12 bg-white border-border rounded-xl focus:ring-primary/20 text-foreground placeholder:text-muted-foreground/50 uppercase text-xs font-bold tracking-widest"
         />
-        <Button type="submit" size="icon" disabled={isSending || !sharedKey} className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-sm">
+        <Button type="submit" size="icon" disabled={isSending} className="h-12 w-12 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 shadow-sm">
           {isSending ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </form>
