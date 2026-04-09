@@ -3,10 +3,10 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { ScrollArea } from '../components/ui/scroll-area';
-import { Input } from '../components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import { Search, User, MessageSquare, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChatComponent from '../components/Chat';
