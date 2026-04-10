@@ -11,6 +11,8 @@ import { Search, User, MessageSquare, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChatComponent from '../components/Chat';
 import { motion, AnimatePresence } from 'motion/react';
+import FriendRequest from '../components/FriendRequest';
+import BottomNav from '../components/BottomNav';
 
 export default function ChatPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -58,6 +60,7 @@ export default function ChatPage() {
         </header>
 
         <div className="space-y-6">
+          <FriendRequest search="" />
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
             <Input 
@@ -117,6 +120,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 }

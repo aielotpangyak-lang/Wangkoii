@@ -67,9 +67,34 @@
         "receiverUid": { "type": "string" },
         "encryptedText": { "type": "string" },
         "iv": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "read": { "type": "boolean", "description": "Read status" },
+        "readAt": { "type": "string", "format": "date-time", "description": "Read timestamp" }
+      },
+      "required": ["senderUid", "receiverUid", "encryptedText", "iv", "createdAt", "read"]
+    },
+    "Friendship": {
+      "title": "Friendship",
+      "description": "A mutual friendship between two users",
+      "type": "object",
+      "properties": {
+        "uid1": { "type": "string" },
+        "uid2": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["senderUid", "receiverUid", "encryptedText", "iv", "createdAt"]
+      "required": ["uid1", "uid2", "createdAt"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "A pending friend request",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string" },
+        "toUid": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "declined"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "toUid", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -79,6 +104,8 @@
     "/games/{gameId}": { "schema": "Game", "description": "Active game sessions" },
     "/matches/{matchId}": { "schema": "MatchHistory", "description": "Completed match history" },
     "/chats/{chatId}/messages/{messageId}": { "schema": "Message", "description": "Encrypted messages" },
+    "/friendships/{friendshipId}": { "schema": "Friendship", "description": "Mutual friendships" },
+    "/friendRequests/{requestId}": { "schema": "FriendRequest", "description": "Pending friend requests" },
     "/notifications/{notificationId}": { 
       "schema": {
         "type": "object",

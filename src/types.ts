@@ -6,6 +6,7 @@ export interface UserProfile {
   lastSeen?: any;
   publicKey?: string;
   photoURL?: string;
+  role?: 'admin' | 'user';
 }
 
 export interface Challenge {
@@ -82,5 +83,16 @@ export interface Message {
   senderUid: string;
   receiverUid: string;
   text: string;
+  createdAt: any;
+  isRead?: boolean;
+}
+
+export interface Notification {
+  id: string;
+  type: 'news' | 'payment' | 'system' | 'friend_request';
+  title: string;
+  message: string;
+  toUid: string; // 'all' for broadcast or specific userId
+  isRead: boolean;
   createdAt: any;
 }

@@ -24,9 +24,13 @@ import {
 import { UserProfile, Challenge, GameSession, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Search, User, Swords, Play, LogOut, UserCircle, Bot, ChevronDown, Gamepad2, Home, MessageSquare, X, Trophy, Trash2, MoreVertical, Eye, UserPlus } from 'lucide-react';
+import { Search, User, Swords, Play, LogOut, UserCircle, Bot, ChevronDown, Gamepad2, Home, MessageSquare, X, Trophy, Trash2, MoreVertical, Eye, UserPlus, Users } from 'lucide-react';
 import { cn, handleFirestoreError } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import FriendList from '../components/FriendList';
+import FriendRequest from '../components/FriendRequest';
+import NotificationBell from '../components/NotificationBell';
+import BottomNav from '../components/BottomNav';
 
 export default function Dashboard() {
   const [search, setSearch] = useState('');
@@ -91,40 +95,11 @@ export default function Dashboard() {
       Notification.requestPermission();
     }
 
-    const notificationsPath = 'notifications';
-    const notificationsRef = collection(db, 'notifications');
-    const qNotifications = query(notificationsRef, where('toUid', '==', auth.currentUser.uid));
-    const unsubNotifications = onSnapshot(qNotifications, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const data = change.doc.data();
-          if (Notification.permission === "granted") {
-            const message = data.type === 'challenge' 
-              ? `${data.fromName} challenged you to a game!` 
-              : `${data.fromName} invited you to play!`;
-            new Notification("Wangkoii", {
-              body: message,
-              icon: "/favicon.ico"
-            });
-          }
-          const toastMessage = data.type === 'challenge' 
-            ? `${data.fromName} challenged you!` 
-            : `${data.fromName} invited you to play!`;
-          toast.info(toastMessage);
-          // Optionally delete the notification document after showing
-          deleteDoc(doc(db, 'notifications', change.doc.id)).catch(err => 
-            handleFirestoreError(err, OperationType.DELETE, `notifications/${change.doc.id}`)
-          );
-        }
-      });
-    }, (error) => handleFirestoreError(error, OperationType.GET, notificationsPath));
-
     return () => {
       unsubUser();
       unsubUsers();
       unsubChallenges();
       unsubGames();
-      unsubNotifications();
     };
   }, []);
 
@@ -303,6 +278,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-xs font-bold tracking-[0.2em] uppercase">Minimal Gaming Portal</p>
         </div>
         <div className="space-y-6">
+          
           {/* Active Games Section */}
           <section>
             <div className="flex items-center justify-between mb-3 px-1">
@@ -451,59 +427,7 @@ export default function Dashboard() {
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-        <div className="max-w-md mx-auto bg-white/80 backdrop-blur-xl border border-border p-1.5 flex items-center justify-between shadow-2xl rounded-2xl">
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
-              onClick={() => setIsBotModalOpen(true)}
-            >
-              <Bot className="w-5 h-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
-              onClick={() => navigate('/chat')}
-            >
-              <MessageSquare className="w-5 h-5" />
-            </Button>
-          </div>
-
-          <Button 
-            variant="outline"
-            className="w-12 h-12 rounded-xl border-border text-foreground hover:bg-muted shadow-sm"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            <Home className="w-5 h-5" />
-          </Button>
-
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
-              onClick={() => setIsSearchOpen(true)}
-            >
-              <Search className="w-5 h-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted overflow-hidden"
-              onClick={() => navigate('/profile')}
-            >
-              {currentUserProfile?.photoURL ? (
-                <img src={currentUserProfile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <UserCircle className="w-5 h-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <BottomNav setIsBotModalOpen={setIsBotModalOpen} setIsSearchOpen={setIsSearchOpen} />
 
       {/* Search & Online Players Modal */}
       <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
@@ -691,24 +615,13 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 className="h-16 rounded-2xl border-pink-100 bg-pink-50/30 hover:bg-pink-50 hover:border-pink-200 justify-between px-6 group"
-                onClick={() => startBotGame('normal')}
-              >
-                <div className="text-left">
-                  <p className="font-bold text-pink-900">Normal Mode</p>
-                  <p className="text-xs text-pink-400 font-medium">A fair challenge</p>
-                </div>
-                <Badge className="bg-pink-200 text-pink-700 border-none font-bold">LVL 2</Badge>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-16 rounded-2xl border-pink-100 bg-pink-50/30 hover:bg-pink-50 hover:border-pink-200 justify-between px-6 group"
                 onClick={() => startBotGame('hard')}
               >
                 <div className="text-left">
                   <p className="font-bold text-pink-900">Hard Mode</p>
                   <p className="text-xs text-pink-400 font-medium">Master level AI</p>
                 </div>
-                <Badge className="bg-pink-600 text-white border-none font-bold">LVL 3</Badge>
+                <Badge className="bg-pink-600 text-white border-none font-bold">LVL 2</Badge>
               </Button>
             </div>
           </div>

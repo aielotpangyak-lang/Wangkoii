@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { auth, db } from '../firebase';
 import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import BottomNav from '../components/BottomNav';
 
 const PRESET_AMOUNTS = [20, 50, 100, 200];
 const MIN_AMOUNT = 10;
@@ -247,6 +248,7 @@ export default function SupportPage() {
           )}
         </AnimatePresence>
       </div>
+      <BottomNav />
     </div>
   );
 }

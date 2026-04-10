@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
@@ -14,6 +14,7 @@ export default function ChatDetail() {
   const { uid } = useParams<{ uid: string }>();
   const [opponent, setOpponent] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFriend, setIsFriend] = useState(false);
   const navigate = useNavigate();
   const userId = auth.currentUser?.uid;
 
@@ -31,7 +32,29 @@ export default function ChatDetail() {
       setLoading(false);
     });
 
-    return () => unsub();
+    // Check friendship
+    const friendshipsRef = collection(db, 'friendships');
+    const q = query(friendshipsRef, where('uid1', '==', userId), where('uid2', '==', uid));
+    const unsubFriendship = onSnapshot(q, (snapshot) => {
+      setIsFriend(!snapshot.empty);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'friendships');
+    });
+
+    // Mark messages as read
+    const chatId = [userId, uid].sort().join('_');
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const qUnread = query(messagesRef, where('receiverUid', '==', userId), where('isRead', '==', false));
+    getDocs(qUnread).then((snapshot) => {
+      snapshot.forEach((docSnap) => {
+        updateDoc(docSnap.ref, { isRead: true });
+      });
+    });
+
+    return () => {
+      unsub();
+      unsubFriendship();
+    };
   }, [uid, userId]);
 
   if (loading) {
@@ -46,6 +69,18 @@ export default function ChatDetail() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
         <h2 className="text-2xl font-black text-foreground uppercase mb-4">User Not Found</h2>
+        <Button onClick={() => navigate('/chat')} className="rounded-xl font-bold uppercase tracking-widest">
+          Back to Messages
+        </Button>
+      </div>
+    );
+  }
+
+  if (!isFriend) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+        <h2 className="text-2xl font-black text-foreground uppercase mb-4">Not Friends</h2>
+        <p className="text-muted-foreground mb-6">You need to be friends to message each other.</p>
         <Button onClick={() => navigate('/chat')} className="rounded-xl font-bold uppercase tracking-widest">
           Back to Messages
         </Button>

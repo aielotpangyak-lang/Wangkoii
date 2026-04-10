@@ -9,6 +9,7 @@ import { Message, OperationType } from '../types';
 import { Send, Lock, ShieldCheck, Bot } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ChatProps {
   opponentUid: string;
@@ -67,7 +68,8 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
         senderUid: userId,
         receiverUid: opponentUid,
         text: text,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        isRead: false
       });
     } catch (err) {
       toast.error("Failed to send message.");
@@ -106,39 +108,44 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
 
       <ScrollArea className="flex-1 p-4">
         <div className="flex flex-col gap-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">No messages yet. Say hi!</p>
-            </div>
-          ) : (
-            messages.map((msg) => (
-              <div 
-                key={msg.id} 
-                className={cn(
-                  "flex flex-col max-w-[85%]",
-                  msg.senderUid === userId ? "self-end items-end" : "self-start items-start"
-                )}
-              >
-                <div className={cn(
-                  "px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm relative group transition-all",
-                  msg.senderUid === userId 
-                    ? "bg-primary text-white rounded-tr-none hover:bg-primary/90" 
-                    : "bg-white text-foreground border border-border rounded-tl-none hover:bg-muted/50"
-                )}>
-                  {msg.text}
-                  <div className={cn(
-                    "absolute -bottom-5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black uppercase tracking-widest text-muted-foreground",
-                    msg.senderUid === userId ? "right-0" : "left-0"
-                  )}>
-                    {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
-                  </div>
-                </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mt-1.5 px-1">
-                  {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
-                </span>
+          <AnimatePresence>
+            {messages.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">No messages yet. Say hi!</p>
               </div>
-            ))
-          )}
+            ) : (
+              messages.map((msg) => (
+                <motion.div 
+                  key={msg.id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className={cn(
+                    "flex flex-col max-w-[85%]",
+                    msg.senderUid === userId ? "self-end items-end" : "self-start items-start"
+                  )}
+                >
+                  <div className={cn(
+                    "px-4 py-2.5 rounded-2xl text-sm font-medium shadow-sm relative group transition-all",
+                    msg.senderUid === userId 
+                      ? "bg-primary text-white rounded-tr-none hover:bg-primary/90" 
+                      : "bg-white text-foreground border border-border rounded-tl-none hover:bg-muted/50"
+                  )}>
+                    {msg.text}
+                    <div className={cn(
+                      "absolute -bottom-5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black uppercase tracking-widest text-muted-foreground",
+                      msg.senderUid === userId ? "right-0" : "left-0"
+                    )}>
+                      {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleString() : 'Sending...'}
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/50 mt-1.5 px-1">
+                    {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                  </span>
+                </motion.div>
+              ))
+            )}
+          </AnimatePresence>
           <div ref={scrollRef} />
         </div>
       </ScrollArea>

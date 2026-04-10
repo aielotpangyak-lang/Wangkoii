@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/Dialog";
+import BottomNav from '../components/BottomNav';
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -183,11 +184,11 @@ export default function Profile() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 mt-8">
+      <main className="max-w-3xl mx-auto px-4 mt-8 pb-24">
         <Card className="border-border bg-white rounded-3xl overflow-hidden shadow-sm">
-          <CardHeader className="text-center pb-8 border-b border-border bg-muted/30 relative">
+          <CardHeader className="text-center pb-8 border-b border-border bg-gradient-to-b from-primary/5 to-white relative">
             <div className="relative mx-auto w-24 h-24 mb-4">
-              <div className="w-full h-full rounded-2xl bg-primary text-white flex items-center justify-center text-3xl font-black shadow-sm overflow-hidden border-4 border-white">
+              <div className="w-full h-full rounded-2xl bg-primary text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-primary/20 overflow-hidden border-4 border-white">
                 {profile.photoURL ? (
                   <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -210,8 +211,8 @@ export default function Profile() {
                 onChange={handleFileChange}
               />
             </div>
-            <CardTitle className="text-xl font-black tracking-tight text-foreground uppercase">{profile.name}</CardTitle>
-            <CardDescription className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">
+            <CardTitle className="text-2xl font-black tracking-tight text-foreground uppercase">{profile.name}</CardTitle>
+            <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground mt-1">
               @{profile.username}
             </CardDescription>
           </CardHeader>
@@ -243,20 +244,10 @@ export default function Profile() {
               </div>
 
               <div className="pt-4 flex flex-col gap-3">
-                <Button type="submit" className="w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-sm" disabled={loading}>
+                <Button type="submit" className="w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20" disabled={loading}>
                   {loading ? 'Saving...' : 'Update Profile'}
                 </Button>
                 
-                {auth.currentUser?.email === 'aielotpangyak@gmail.com' && (
-                  <Button 
-                    type="button"
-                    onClick={() => navigate('/admin')}
-                    className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-sm"
-                  >
-                    Admin Panel
-                  </Button>
-                )}
-
                 <div className="grid grid-cols-2 gap-3">
                   <Button 
                     type="button" 
@@ -290,7 +281,7 @@ export default function Profile() {
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter className="mt-4 gap-2">
-                        <Button variant="ghost" className="rounded-xl font-bold text-muted-foreground text-xs uppercase" onClick={() => {}}>Cancel</Button>
+                        <Button variant="ghost" className="rounded-xl font-bold text-muted-foreground text-xs uppercase">Cancel</Button>
                         <Button 
                           variant="destructive" 
                           className="rounded-xl font-bold text-xs uppercase"
@@ -314,6 +305,7 @@ export default function Profile() {
           </p>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 }

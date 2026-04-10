@@ -24,6 +24,7 @@ import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, Alert
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { motion, AnimatePresence } from 'motion/react';
+import BottomNav from '../components/BottomNav';
 
 export default function Game() {
   const { gameId } = useParams();
@@ -189,13 +190,14 @@ export default function Game() {
     const text = quickChat;
     setQuickChat('');
     
-    await updateDoc(doc(db, 'games', gameId), {
-      lastMessage: {
-        uid: userId,
-        text: text,
-        timestamp: serverTimestamp()
-      }
-    });
+    // In-game chat is temporary and not saved to Firestore
+    setShowBubble({ uid: userId, text: text });
+    
+    const timer = setTimeout(() => {
+      setShowBubble(null);
+    }, 5000);
+    
+    return () => clearTimeout(timer);
   };
 
   const makeBotMove = async () => {
@@ -208,13 +210,6 @@ export default function Game() {
 
     if (game.difficulty === 'easy') {
       moveIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-    } else if (game.difficulty === 'normal') {
-      // 50% chance of best move, 50% random
-      if (Math.random() > 0.5) {
-        moveIndex = getBestMove(game.board, 'bot');
-      } else {
-        moveIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-      }
     } else {
       // Hard: Always best move
       moveIndex = getBestMove(game.board, 'bot');
@@ -663,6 +658,7 @@ export default function Game() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <BottomNav />
     </div>
   );
 }
