@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
-import { User, MessageSquare } from 'lucide-react';
+import { User, MessageSquare, Swords } from 'lucide-react';
 import { handleFirestoreError, cn } from '../lib/utils';
 
-export default function FriendList({ search }: { search: string }) {
+export default function FriendList({ search, onChallenge }: { search: string, onChallenge?: (user: UserProfile) => void }) {
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const navigate = useNavigate();
   const userId = auth.currentUser?.uid;
@@ -21,10 +21,23 @@ export default function FriendList({ search }: { search: string }) {
     const friendshipsRef = collection(db, 'friendships');
     const q = query(friendshipsRef, where('uid1', '==', userId)); // Or uid2
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      // Fetch user profiles for friends...
-      // For now, just setting a dummy list to test
-      setFriends([]);
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const friendUids = snapshot.docs.map(doc => doc.data().uid2);
+      
+      if (friendUids.length === 0) {
+        setFriends([]);
+        return;
+      }
+
+      // Fetch user profiles for all friends
+      const friendsData: UserProfile[] = [];
+      for (const uid of friendUids) {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+          friendsData.push(userDoc.data() as UserProfile);
+        }
+      }
+      setFriends(friendsData);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'friendships');
     });
@@ -54,11 +67,25 @@ export default function FriendList({ search }: { search: string }) {
                     <User className={cn("w-6 h-6", friend.isOnline ? "text-primary" : "text-muted-foreground")} />
                     {friend.isOnline && <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full border border-white" />}
                   </div>
-                  <span className={cn("text-xs font-bold", friend.lastSeen && (Date.now() - friend.lastSeen.toMillis()) < 1000 * 60 * 60 ? "text-primary" : "text-foreground")}>{friend.name}</span>
+                  <div className="flex flex-col">
+                    <span className={cn("text-xs font-bold", friend.lastSeen && (Date.now() - friend.lastSeen.toMillis()) < 1000 * 60 * 60 ? "text-primary" : "text-foreground")}>{friend.name}</span>
+                    <span className="text-[10px] text-muted-foreground">@{friend.username}</span>
+                  </div>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => navigate(`/chat/${friend.uid}`)}>
-                  <MessageSquare className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 gap-1.5 rounded-xl text-primary hover:text-primary hover:bg-primary/10 font-bold text-[10px] uppercase tracking-widest"
+                    onClick={() => onChallenge?.(friend)}
+                  >
+                    <Swords className="w-3.5 h-3.5" />
+                    Challenge
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary" onClick={() => navigate(`/chat/${friend.uid}`)}>
+                    <MessageSquare className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

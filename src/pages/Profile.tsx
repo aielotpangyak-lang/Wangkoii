@@ -7,7 +7,7 @@ import {
 import { doc, onSnapshot, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '../firebase';
-import { handleFirestoreError } from '../lib/utils';
+import { handleFirestoreError, cn } from '../lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { UserProfile, OperationType } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowLeft, User, LogOut, ShieldCheck, Trash2, AlertTriangle, Camera, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, LogOut, ShieldCheck, Trash2, AlertTriangle, Pencil, Loader2 } from 'lucide-react';
 import { isProfane } from '../lib/profanity';
 import {
   Dialog,
@@ -27,15 +27,25 @@ import {
   DialogTrigger,
 } from "@/components/ui/Dialog";
 import BottomNav from '../components/BottomNav';
+import ChatPopup from '../components/ChatPopup';
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [name, setName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState('');
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+
+  const avatars = [
+    'https://api.dicebear.com/9.x/adventurer/svg?seed=Felix',
+    'https://api.dicebear.com/9.x/adventurer/svg?seed=Aneka',
+    'https://api.dicebear.com/9.x/adventurer/svg?seed=Bandit',
+    'https://api.dicebear.com/9.x/adventurer/svg?seed=Cali',
+    'https://api.dicebear.com/9.x/adventurer/svg?seed=Dusty'
+  ];
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -46,44 +56,12 @@ export default function Profile() {
         const data = docSnap.data() as UserProfile;
         setProfile(data);
         setName(data.name);
+        setSelectedAvatar(data.photoURL || avatars[0]);
       }
     }, (error) => handleFirestoreError(error, OperationType.GET, path));
 
     return () => unsub();
   }, []);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !auth.currentUser) return;
-
-    // Validate file type and size (e.g., max 2MB)
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file.');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image size must be less than 2MB.');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const storageRef = ref(storage, `profiles/${auth.currentUser.uid}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        photoURL: downloadURL
-      });
-      
-      toast.success('Profile picture updated!');
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload image: ' + error.message);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,9 +75,11 @@ export default function Profile() {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        name: name
+        name: name,
+        photoURL: selectedAvatar
       });
       toast.success('Profile updated!');
+      setIsEditingName(false);
     } catch (error: any) {
       toast.error('Update failed: ' + error.message);
     } finally {
@@ -189,29 +169,25 @@ export default function Profile() {
           <CardHeader className="text-center pb-8 border-b border-border bg-gradient-to-b from-primary/5 to-white relative">
             <div className="relative mx-auto w-24 h-24 mb-4">
               <div className="w-full h-full rounded-2xl bg-primary text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-primary/20 overflow-hidden border-4 border-white">
-                {profile.photoURL ? (
-                  <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  profile.name[0].toUpperCase()
-                )}
+                <img src={selectedAvatar} alt="Profile" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
               </div>
-              <Button
-                size="icon"
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-xl bg-white text-primary border border-border shadow-md hover:bg-muted"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-              </Button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight text-foreground uppercase">{profile.name}</CardTitle>
+            <div className="grid grid-cols-5 gap-2 mt-4">
+              {avatars.map((avatar) => (
+                <button
+                  key={avatar}
+                  type="button"
+                  onClick={() => setSelectedAvatar(avatar)}
+                  className={cn(
+                    "w-12 h-12 rounded-xl border-2 overflow-hidden aspect-square",
+                    selectedAvatar === avatar ? "border-primary" : "border-transparent"
+                  )}
+                >
+                  <img src={avatar} alt="Avatar" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
+                </button>
+              ))}
+            </div>
+            <CardTitle className="text-2xl font-black tracking-tight text-foreground uppercase mt-6">{profile.name}</CardTitle>
             <CardDescription className="font-bold text-xs uppercase tracking-widest text-muted-foreground mt-1">
               @{profile.username}
             </CardDescription>
@@ -232,19 +208,38 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground font-bold text-xs uppercase tracking-wider ml-1">Display Name</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="name" className="text-foreground font-bold text-xs uppercase tracking-wider ml-1">Display Name</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary"
+                    onClick={() => setIsEditingName(!isEditingName)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                </div>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="Your Name"
-                  className="bg-white border-border rounded-xl h-12 focus:ring-primary/20 text-foreground"
+                  disabled={!isEditingName}
+                  className={cn(
+                    "bg-white border-border rounded-xl h-12 focus:ring-primary/20 text-foreground",
+                    !isEditingName && "bg-muted cursor-not-allowed"
+                  )}
                 />
               </div>
 
               <div className="pt-4 flex flex-col gap-3">
-                <Button type="submit" className="w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20" 
+                  disabled={loading || (name === profile.name && selectedAvatar === (profile.photoURL || avatars[0]))}
+                >
                   {loading ? 'Saving...' : 'Update Profile'}
                 </Button>
                 
@@ -305,7 +300,8 @@ export default function Profile() {
           </p>
         </div>
       </main>
-      <BottomNav />
+      <BottomNav setIsChatOpen={setIsChatOpen} />
+      <ChatPopup isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }

@@ -55,12 +55,19 @@ export default function VoiceChat({ opponentUid }: VoiceChatProps) {
 
     try {
       pc.current = new RTCPeerConnection(servers);
-      localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       
+      if (!pc.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
+      localStream.current = stream;
       localStream.current.getTracks().forEach(track => {
         pc.current?.addTrack(track, localStream.current!);
       });
 
+      if (!pc.current) return;
       pc.current.ontrack = (event) => {
         if (remoteAudioRef.current) {
           remoteAudioRef.current.srcObject = event.streams[0];
@@ -76,7 +83,9 @@ export default function VoiceChat({ opponentUid }: VoiceChatProps) {
         }
       };
 
+      if (!pc.current) return;
       const offerDescription = await pc.current.createOffer();
+      if (!pc.current) return;
       await pc.current.setLocalDescription(offerDescription);
 
       const offer = {
@@ -117,12 +126,19 @@ export default function VoiceChat({ opponentUid }: VoiceChatProps) {
 
     try {
       pc.current = new RTCPeerConnection(servers);
-      localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       
+      if (!pc.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
+      localStream.current = stream;
       localStream.current.getTracks().forEach(track => {
         pc.current?.addTrack(track, localStream.current!);
       });
 
+      if (!pc.current) return;
       pc.current.ontrack = (event) => {
         if (remoteAudioRef.current) {
           remoteAudioRef.current.srcObject = event.streams[0];
@@ -139,14 +155,17 @@ export default function VoiceChat({ opponentUid }: VoiceChatProps) {
       };
 
       const callDoc = await getDoc(doc(db, 'calls', callId));
+      if (!pc.current) return;
       const callData = callDoc.data();
 
       if (!callData?.offer) return;
 
       const offerDescription = new RTCSessionDescription(callData.offer);
       await pc.current.setRemoteDescription(offerDescription);
+      if (!pc.current) return;
 
       const answerDescription = await pc.current.createAnswer();
+      if (!pc.current) return;
       await pc.current.setLocalDescription(answerDescription);
 
       const answer = {

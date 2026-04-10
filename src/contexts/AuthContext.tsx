@@ -46,9 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Initial fetch
         const docRef = doc(db, 'users', u.uid);
         const docSnap = await getDoc(docRef);
+        console.log('Profile fetch:', u.uid, docSnap.exists(), docSnap.data());
         if (docSnap.exists()) {
           setProfile(docSnap.data() as UserProfile);
         } else {
+          console.log('Profile not found for:', u.uid);
           setProfile(null);
         }
 

@@ -89,7 +89,7 @@ export default function UserProfileView() {
       </header>
       <Card className="w-full max-w-md rounded-3xl p-6 text-center">
         <div className="w-24 h-24 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center overflow-hidden">
-          {profile.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-muted-foreground" />}
+          {profile.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover aspect-square" /> : <User className="w-12 h-12 text-muted-foreground" />}
         </div>
         <h2 className="text-2xl font-black">{profile.name}</h2>
         <p className="text-muted-foreground mb-6">@{profile.username}</p>

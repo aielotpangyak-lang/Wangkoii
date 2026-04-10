@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp, addDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -18,10 +18,17 @@ export default function FriendRequest({ search }: { search: string }) {
     const requestsRef = collection(db, 'friendRequests');
     const q = query(requestsRef, where('toUid', '==', userId), where('status', '==', 'pending'));
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const newRequests = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const newRequests = await Promise.all(snapshot.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        // Fetch sender profile
+        const userDoc = await getDoc(doc(db, 'users', data.fromUid));
+        const userData = userDoc.exists() ? userDoc.data() : { name: 'Unknown User' };
+        return {
+          id: docSnap.id,
+          ...data,
+          fromName: userData.name
+        };
       }));
       setRequests(newRequests);
     }, (error) => {
@@ -32,7 +39,7 @@ export default function FriendRequest({ search }: { search: string }) {
   }, [userId]);
 
   const filteredRequests = requests.filter(r => 
-    r.fromUid.toLowerCase().includes(search.toLowerCase())
+    r.fromName.toLowerCase().includes(search.toLowerCase())
   );
 
   const acceptRequest = async (request: any) => {
@@ -56,6 +63,7 @@ export default function FriendRequest({ search }: { search: string }) {
 
       toast.success('Friend request accepted!');
     } catch (error) {
+      console.error('Accept error:', error);
       toast.error('Failed to accept friend request.');
     }
   };
@@ -72,7 +80,7 @@ export default function FriendRequest({ search }: { search: string }) {
           <div className="space-y-2">
             {filteredRequests.map(req => (
               <div key={req.id} className="flex items-center justify-between p-2 rounded-xl bg-muted/50">
-                <span className="text-xs font-bold truncate max-w-[150px]">{req.fromUid}</span>
+                <span className="text-xs font-bold truncate max-w-[150px]">{req.fromName}</span>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" onClick={() => acceptRequest(req)}>
                     <Check className="w-4 h-4 text-green-500" />

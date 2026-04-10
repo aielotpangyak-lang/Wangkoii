@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Bot, MessageSquare, Users, Home, Search, UserCircle } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import { cn } from '@/lib/utils';
 
-export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: { 
+export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen, setIsChatOpen, activePath }: { 
   setIsBotModalOpen?: (open: boolean) => void,
-  setIsSearchOpen?: (open: boolean) => void 
+  setIsSearchOpen?: (open: boolean) => void,
+  setIsChatOpen?: (open: boolean) => void,
+  activePath?: string
 }) {
   const navigate = useNavigate();
 
@@ -17,7 +20,7 @@ export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
+            className={cn("w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted", activePath === '/bot' && "text-primary bg-muted")}
             onClick={() => setIsBotModalOpen?.(true)}
           >
             <Bot className="w-5 h-5" />
@@ -25,15 +28,15 @@ export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
-            onClick={() => navigate('/chat')}
+            className={cn("w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted", activePath === '/chat' && "text-primary bg-muted")}
+            onClick={() => setIsChatOpen?.(true)}
           >
             <MessageSquare className="w-5 h-5" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
+            className={cn("w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted", activePath === '/friends' && "text-primary bg-muted")}
             onClick={() => navigate('/friends')}
           >
             <Users className="w-5 h-5" />
@@ -42,7 +45,7 @@ export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: {
 
         <Button 
           variant="outline"
-          className="w-12 h-12 rounded-xl border-border text-foreground hover:bg-muted shadow-sm"
+          className={cn("w-12 h-12 rounded-xl border-border text-foreground hover:bg-muted shadow-sm", activePath === '/' && "bg-muted")}
           onClick={() => navigate('/')}
         >
           <Home className="w-5 h-5" />
@@ -53,7 +56,7 @@ export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
+            className={cn("w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted", activePath === '/search' && "text-primary bg-muted")}
             onClick={() => setIsSearchOpen?.(true)}
           >
             <Search className="w-5 h-5" />
@@ -61,7 +64,7 @@ export default function BottomNav({ setIsBotModalOpen, setIsSearchOpen }: {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted overflow-hidden"
+            className={cn("w-12 h-12 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted overflow-hidden", activePath === '/profile' && "text-primary bg-muted")}
             onClick={() => navigate('/profile')}
           >
             <UserCircle className="w-5 h-5" />

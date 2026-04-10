@@ -107,7 +107,7 @@ export default function ChatDetail() {
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden border border-border">
                   {opponent.photoURL ? (
-                    <img src={opponent.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={opponent.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
                   ) : <User className="w-5 h-5 text-muted-foreground" />}
                 </div>
                 {opponent.isOnline && (

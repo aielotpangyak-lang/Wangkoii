@@ -94,7 +94,8 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(request.resource.data) &&
                     getAfter(/databases/$(database)/documents/usernames/$(request.resource.data.username)).data.uid == request.auth.uid;
       allow update: if isOwner(userId) && 
-                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isOnline', 'lastSeen', 'name', 'publicKey', 'photoURL']);
+                    request.resource.data.uid == resource.data.uid &&
+                    request.resource.data.username == resource.data.username;
       allow delete: if isOwner(userId);
     }
 
@@ -118,7 +119,7 @@ service cloud.firestore {
     // Friendships
     match /friendships/{friendshipId} {
       allow read: if isAuthenticated() && (request.auth.uid == resource.data.uid1 || request.auth.uid == resource.data.uid2);
-      allow create: if isAuthenticated() && request.auth.uid in friendshipId.split('_');
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.uid1 || request.auth.uid == request.resource.data.uid2);
     }
 
     // FriendRequests

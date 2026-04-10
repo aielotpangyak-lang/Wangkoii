@@ -26,11 +26,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Search, User, Swords, Play, LogOut, UserCircle, Bot, ChevronDown, Gamepad2, Home, MessageSquare, X, Trophy, Trash2, MoreVertical, Eye, UserPlus, Users } from 'lucide-react';
 import { cn, handleFirestoreError } from '../lib/utils';
+import { MARK_URLS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import FriendList from '../components/FriendList';
 import FriendRequest from '../components/FriendRequest';
 import NotificationBell from '../components/NotificationBell';
 import BottomNav from '../components/BottomNav';
+import ChatPopup from '../components/ChatPopup';
 
 export default function Dashboard() {
   const [search, setSearch] = useState('');
@@ -39,12 +41,15 @@ export default function Dashboard() {
   const [activeGames, setActiveGames] = useState<GameSession[]>([]);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [isBotModalOpen, setIsBotModalOpen] = useState(false);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [timerSetting, setTimerSetting] = useState<'15' | '30' | '60' | 'unlimited'>('unlimited');
+  const [gameMode, setGameMode] = useState<'normal' | 'photo'>('normal');
+  const [selectedMark, setSelectedMark] = useState<'X' | 'O' | 'photoA' | 'photoB'>('X');
   const navigate = useNavigate();
 
   const randomOnlinePlayers = useMemo(() => {
@@ -103,6 +108,21 @@ export default function Dashboard() {
     };
   }, []);
 
+  const sendFriendRequest = async (toUser: UserProfile) => {
+    if (!auth.currentUser || !currentUserProfile) return;
+    try {
+      await addDoc(collection(db, 'friendRequests'), {
+        fromUid: auth.currentUser.uid,
+        toUid: toUser.uid,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      toast.success(`Friend request sent to ${toUser.name}`);
+    } catch (error) {
+      toast.error('Failed to send friend request');
+    }
+  };
+
   const sendInvite = async (toUser: UserProfile) => {
     if (!auth.currentUser || !currentUserProfile) return;
     try {
@@ -152,6 +172,22 @@ export default function Dashboard() {
         turn: auth.currentUser.uid,
         difficulty,
         isBotGame: true,
+        playerMarks: (() => {
+          if (selectedMark === 'X' || selectedMark === 'O') {
+            return {
+              [auth.currentUser.uid]: selectedMark,
+              'bot': selectedMark === 'X' ? 'O' : 'X'
+            };
+          } else {
+            // Photo mode: randomize assignment of A and B
+            const isA = Math.random() > 0.5;
+            return {
+              [auth.currentUser.uid]: isA ? 'photoA' : 'photoB',
+              'bot': isA ? 'photoB' : 'photoA'
+            };
+          }
+        })(),
+        markUrls: MARK_URLS,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -173,6 +209,7 @@ export default function Dashboard() {
         status: 'pending',
         gameType: 'Tic Tac Toe',
         timerSetting: timerSetting,
+        selectedMark: selectedMark,
         createdAt: serverTimestamp()
       });
 
@@ -217,6 +254,22 @@ export default function Dashboard() {
         board: Array(9).fill(null),
         turn: challenge.fromUid, // Challenger starts
         timerSetting: challenge.timerSetting || 'unlimited',
+        playerMarks: (() => {
+          if (challenge.selectedMark === 'X' || challenge.selectedMark === 'O') {
+            return {
+              [challenge.fromUid]: challenge.selectedMark,
+              [challenge.toUid]: challenge.selectedMark === 'X' ? 'O' : 'X'
+            };
+          } else {
+            // Photo mode: randomize assignment of A and B
+            const isA = Math.random() > 0.5;
+            return {
+              [challenge.fromUid]: isA ? 'photoA' : 'photoB',
+              [challenge.toUid]: isA ? 'photoB' : 'photoA'
+            };
+          }
+        })(),
+        markUrls: MARK_URLS,
         turnStartTime: serverTimestamp(),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -359,6 +412,17 @@ export default function Dashboard() {
             </div>
           </section>
 
+          {/* Friends Section */}
+          <section>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-sm font-bold flex items-center gap-2 text-foreground uppercase tracking-widest">
+                <Users className="w-3 h-3 text-primary" />
+                Friends
+              </h2>
+            </div>
+            <FriendList search="" onChallenge={openChallengeModal} />
+          </section>
+
           {/* Challenges Section */}
           <section>
             <div className="flex items-center justify-between mb-4 px-2">
@@ -427,7 +491,10 @@ export default function Dashboard() {
       </main>
 
       {/* Fixed Bottom Navigation */}
-      <BottomNav setIsBotModalOpen={setIsBotModalOpen} setIsSearchOpen={setIsSearchOpen} />
+      <BottomNav setIsBotModalOpen={setIsBotModalOpen} setIsSearchOpen={setIsSearchOpen} setIsChatOpen={setIsChatOpen} />
+      
+      {/* Chat Popup */}
+      <ChatPopup isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       {/* Search & Online Players Modal */}
       <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
@@ -444,6 +511,7 @@ export default function Dashboard() {
                 className="pl-11 pr-11 bg-pink-50/50 border-pink-100 h-12 rounded-2xl focus:ring-pink-200 text-pink-900 placeholder:text-pink-300"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoFocus
               />
               {isSearching && (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -464,7 +532,7 @@ export default function Dashboard() {
                             <div className="relative">
                               <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                                 {user.photoURL ? (
-                                  <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
                                 ) : <User className="w-5 h-5 text-pink-400" />}
                               </div>
                               {user.isOnline && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />}
@@ -513,7 +581,7 @@ export default function Dashboard() {
                               <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                                   {user.photoURL ? (
-                                    <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
                                   ) : <User className="w-5 h-5 text-pink-400" />}
                                 </div>
                                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
@@ -531,6 +599,10 @@ export default function Dashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="bg-white border-pink-100 rounded-xl shadow-xl">
+                                <DropdownMenuItem onClick={() => sendFriendRequest(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
+                                  <UserPlus className="w-4 h-4" />
+                                  Add Friend
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openChallengeModal(user)} className="gap-2 font-bold text-pink-700 focus:bg-pink-50 focus:text-pink-900 cursor-pointer">
                                   <Swords className="w-4 h-4" />
                                   Invite to Play
@@ -565,6 +637,65 @@ export default function Dashboard() {
           </DialogHeader>
           <div className="space-y-6">
             <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Game Mode</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['normal', 'photo'] as const).map((m) => (
+                  <Button
+                    key={m}
+                    variant={gameMode === m ? 'default' : 'outline'}
+                    className={cn(
+                      "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                      gameMode === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                    )}
+                    onClick={() => {
+                      setGameMode(m);
+                      setSelectedMark(m === 'normal' ? 'X' : 'photoA');
+                    }}
+                  >
+                    {m}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">
+                {gameMode === 'normal' ? 'Select Your Mark' : 'Select Photo Set'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {gameMode === 'normal' ? (
+                  (['X', 'O'] as const).map((m) => (
+                    <Button
+                      key={m}
+                      variant={selectedMark === m ? 'default' : 'outline'}
+                      className={cn(
+                        "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                        selectedMark === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                      )}
+                      onClick={() => setSelectedMark(m)}
+                    >
+                      {m}
+                    </Button>
+                  ))
+                ) : (
+                  (['photoA', 'photoB'] as const).map((m) => (
+                    <Button
+                      key={m}
+                      variant={selectedMark === m ? 'default' : 'outline'}
+                      className={cn(
+                        "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                        selectedMark === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                      )}
+                      onClick={() => setSelectedMark(m)}
+                    >
+                      {m === 'photoA' ? 'A' : 'B'}
+                    </Button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
               <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Select Turn Timer</p>
               <div className="grid grid-cols-2 gap-2">
                 {(['15', '30', '60', 'unlimited'] as const).map((t) => (
@@ -598,9 +729,67 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-black tracking-tight mb-4 text-pink-600">Play with Bot</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-pink-400 font-medium mb-6">Select your challenge level. The bot will adapt to your skill.</p>
-            <div className="grid gap-3">
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Game Mode</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(['normal', 'photo'] as const).map((m) => (
+                  <Button
+                    key={m}
+                    variant={gameMode === m ? 'default' : 'outline'}
+                    className={cn(
+                      "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                      gameMode === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                    )}
+                    onClick={() => {
+                      setGameMode(m);
+                      setSelectedMark(m === 'normal' ? 'X' : 'photoA');
+                    }}
+                  >
+                    {m}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">
+                {gameMode === 'normal' ? 'Select Your Mark' : 'Select Photo Set'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {gameMode === 'normal' ? (
+                  (['X', 'O'] as const).map((m) => (
+                    <Button
+                      key={m}
+                      variant={selectedMark === m ? 'default' : 'outline'}
+                      className={cn(
+                        "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                        selectedMark === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                      )}
+                      onClick={() => setSelectedMark(m)}
+                    >
+                      {m}
+                    </Button>
+                  ))
+                ) : (
+                  (['photoA', 'photoB'] as const).map((m) => (
+                    <Button
+                      key={m}
+                      variant={selectedMark === m ? 'default' : 'outline'}
+                      className={cn(
+                        "rounded-xl font-bold uppercase text-xs tracking-widest h-12",
+                        selectedMark === m ? "bg-pink-600 text-white" : "border-pink-100 text-pink-600 hover:bg-pink-50"
+                      )}
+                      onClick={() => setSelectedMark(m)}
+                    >
+                      {m === 'photoA' ? 'A' : 'B'}
+                    </Button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-3 pt-2">
               <Button 
                 variant="outline" 
                 className="h-16 rounded-2xl border-pink-100 bg-pink-50/30 hover:bg-pink-50 hover:border-pink-200 justify-between px-6 group"
@@ -638,7 +827,7 @@ export default function Dashboard() {
                   <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-lg">
                     <div className="w-full h-full rounded-2xl bg-pink-100 flex items-center justify-center overflow-hidden">
                       {selectedUser.photoURL ? (
-                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
                       ) : <User className="w-10 h-10 text-pink-400" />}
                     </div>
                   </div>

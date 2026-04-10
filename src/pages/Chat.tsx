@@ -87,7 +87,7 @@ export default function ChatPage() {
                     <div className="relative shrink-0">
                       <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center overflow-hidden border border-border group-hover:border-primary/20 transition-colors">
                         {user.photoURL ? (
-                          <img src={user.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
                         ) : <User className="w-6 h-6 text-muted-foreground" />}
                       </div>
                       {user.isOnline && (

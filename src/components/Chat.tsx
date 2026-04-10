@@ -22,6 +22,8 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const ringtoneRef = useRef<HTMLAudioElement>(new Audio('https://assets.mixkit.co/active_storage/sfx/135/135-preview.mp3'));
+  const lastMessageIdRef = useRef<string | null>(null);
   const userId = auth.currentUser?.uid;
 
   const chatId = userId && opponentUid 
@@ -44,6 +46,22 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
         ...doc.data()
       } as Message));
       
+      // Play sound and show notification for new messages from opponent
+      if (newMessages.length > 0) {
+        const lastMsg = newMessages[newMessages.length - 1];
+        if (lastMessageIdRef.current && lastMsg.id !== lastMessageIdRef.current && lastMsg.senderUid === opponentUid) {
+          ringtoneRef.current.play().catch(() => {});
+          
+          if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(`New message from ${opponentName}`, {
+              body: lastMsg.text,
+              icon: '/favicon.ico'
+            });
+          }
+        }
+        lastMessageIdRef.current = lastMsg.id;
+      }
+
       setMessages(newMessages);
       setLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -53,7 +71,7 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
     });
 
     return () => unsub();
-  }, [chatId]);
+  }, [chatId, opponentUid, opponentName]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

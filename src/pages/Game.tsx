@@ -20,7 +20,7 @@ import { UserProfile, GameSession, MatchHistory, OperationType } from '../types'
 import ChatComponent from '../components/Chat';
 import VoiceChat from '../components/VoiceChat';
 import { toast } from 'sonner';
-import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,18 +37,19 @@ export default function Game() {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
+  const [isChatVisible, setIsChatVisible] = useState(true);
 
   // Sound Effects
   const moveSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'));
+  const opponentMoveSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3'));
   const winSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'));
   const loseSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3'));
-  const clickSound = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'));
 
   useEffect(() => {
     moveSound.current.volume = 0.3;
+    opponentMoveSound.current.volume = 0.3;
     winSound.current.volume = 0.4;
     loseSound.current.volume = 0.3;
-    clickSound.current.volume = 0.2;
   }, []);
 
   useEffect(() => {
@@ -183,6 +184,11 @@ export default function Game() {
   const opponentUsername = game.playerUsernames[opponentId!] || 'Opponent';
   const myUsername = game.playerUsernames[userId!] || 'Me';
 
+  const myMark = game.playerMarks?.[userId!];
+  const opponentMark = game.playerMarks?.[opponentId!];
+  const myUrl = myMark && myMark !== 'X' && myMark !== 'O' ? game.markUrls?.[myMark] : null;
+  const opponentUrl = opponentMark && opponentMark !== 'X' && opponentMark !== 'O' ? game.markUrls?.[opponentMark] : null;
+
   const sendQuickChat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickChat.trim() || !gameId || !userId) return;
@@ -302,8 +308,12 @@ export default function Game() {
     }
 
     await updateDoc(doc(db, 'games', game.id), update);
-    moveSound.current.play().catch(() => {});
-    clickSound.current.play().catch(() => {});
+    
+    if (game.turn === userId) {
+      moveSound.current.play().catch(() => {});
+    } else {
+      opponentMoveSound.current.play().catch(() => {});
+    }
   };
 
   const calculateWinner = (squares: (string | null)[]) => {
@@ -415,7 +425,9 @@ export default function Game() {
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center font-mono font-black text-xl border border-border text-foreground">X</div>
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center font-mono font-black text-xl border border-border text-foreground overflow-hidden">
+                {myUrl ? <img src={myUrl} alt={myMark || ''} className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" /> : (myMark === 'X' ? 'X' : myMark === 'O' ? 'O' : myMark)}
+              </div>
               <p className="font-bold text-[10px] uppercase tracking-widest text-foreground">{myUsername}</p>
               {isMyTurn && game.status === 'active' && <div className="absolute -bottom-2 w-2 h-2 bg-primary rounded-full animate-pulse" />}
             </div>
@@ -438,7 +450,9 @@ export default function Game() {
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center font-mono font-black text-xl border border-border text-foreground">O</div>
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center font-mono font-black text-xl border border-border text-foreground overflow-hidden">
+                {opponentUrl ? <img src={opponentUrl} alt={opponentMark || ''} className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" /> : (opponentMark === 'X' ? 'X' : opponentMark === 'O' ? 'O' : opponentMark)}
+              </div>
               <p className="font-bold text-[10px] uppercase tracking-widest text-foreground">{opponentUsername}</p>
               {!isMyTurn && game.status === 'active' && <div className="absolute -bottom-2 w-2 h-2 bg-muted-foreground/30 rounded-full animate-pulse" />}
             </div>
@@ -464,8 +478,13 @@ export default function Game() {
                     initial={{ scale: 0, rotate: -45 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="w-full h-full flex items-center justify-center"
                   >
-                    {cell === userId ? 'X' : 'O'}
+                    {(() => {
+                      const mark = game.playerMarks?.[cell];
+                      const url = mark && mark !== 'X' && mark !== 'O' ? game.markUrls?.[mark] : null;
+                      return url ? <img src={url} alt={mark || ''} className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" /> : (mark === 'X' ? 'X' : mark === 'O' ? 'O' : mark);
+                    })()}
                   </motion.span>
                 ) : ''}
               </motion.button>
@@ -518,70 +537,97 @@ export default function Game() {
         </div>
 
         {/* Sidebar: Chat & History */}
-        <div className="lg:col-span-2 space-y-6 flex flex-col h-[600px] lg:h-[calc(100vh-12rem)]">
-          <Tabs defaultValue="chat" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted border border-border p-1 rounded-xl">
-              <TabsTrigger value="chat" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase text-xs tracking-widest">
-                <MessageSquare className="w-4 h-4" />
-                Chat
-              </TabsTrigger>
-              <TabsTrigger value="history" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase text-xs tracking-widest">
-                <History className="w-4 h-4" />
-                History
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="chat" className="flex-1 mt-0">
-              <div className="h-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm">
-                <ChatComponent opponentUid={opponentId!} opponentName={opponentUsername} />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="history" className="flex-1 mt-0">
-              <Card className="bg-white border-border h-full flex flex-col rounded-2xl overflow-hidden shadow-sm">
-                <CardHeader className="pb-4 border-b border-border shrink-0">
-                  <CardTitle className="text-sm flex items-center gap-2 font-black uppercase tracking-widest text-foreground">
-                    <History className="w-4 h-4 text-muted-foreground" />
-                    Match History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4 flex-1 overflow-hidden">
-                  <div className="space-y-2 h-full overflow-y-auto pr-2 custom-scrollbar">
-                    {history.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30">
-                        <History className="w-10 h-10 mb-2 opacity-50" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest">No history</p>
-                      </div>
-                    ) : (
-                      history.map((match, i) => (
-                        <div key={match.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border text-xs hover:border-primary transition-all">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-black text-foreground border border-border">
-                              {i + 1}
-                            </div>
-                            <div>
-                              <p className="font-black uppercase tracking-widest text-foreground">{match.gameType}</p>
-                              <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">
-                                {match.createdAt?.toDate ? match.createdAt.toDate().toLocaleDateString() : 'Just now'}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge 
-                            className={cn(
-                              "rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest",
-                              match.winner === 'draw' ? 'bg-muted text-foreground' : (match.winner === userId ? 'bg-primary text-white' : 'bg-destructive text-white')
-                            )}
-                          >
-                            {match.winner === 'draw' ? 'Draw' : (match.winner === userId ? 'Win' : 'Loss')}
-                          </Badge>
+        <div className={cn(
+          "lg:col-span-2 space-y-6 flex flex-col transition-all duration-300",
+          isChatVisible ? "h-[600px] lg:h-[calc(100vh-12rem)] opacity-100" : "h-12 lg:h-12 opacity-100 overflow-hidden"
+        )}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Game Social</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 gap-2 rounded-xl text-muted-foreground hover:text-primary font-bold text-[10px] uppercase tracking-widest"
+              onClick={() => setIsChatVisible(!isChatVisible)}
+            >
+              {isChatVisible ? (
+                <>
+                  < EyeOff className="w-3.5 h-3.5" />
+                  Hide Chat
+                </>
+              ) : (
+                <>
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Show Chat
+                </>
+              )}
+            </Button>
+          </div>
+
+          {isChatVisible && (
+            <Tabs defaultValue="chat" className="flex-1 flex flex-col">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted border border-border p-1 rounded-xl">
+                <TabsTrigger value="chat" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase text-xs tracking-widest">
+                  <MessageSquare className="w-4 h-4" />
+                  Chat
+                </TabsTrigger>
+                <TabsTrigger value="history" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase text-xs tracking-widest">
+                  <History className="w-4 h-4" />
+                  History
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="chat" className="flex-1 mt-0">
+                <div className="h-full rounded-2xl overflow-hidden border border-border bg-white shadow-sm">
+                  <ChatComponent opponentUid={opponentId!} opponentName={opponentUsername} />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="history" className="flex-1 mt-0">
+                <Card className="bg-white border-border h-full flex flex-col rounded-2xl overflow-hidden shadow-sm">
+                  <CardHeader className="pb-4 border-b border-border shrink-0">
+                    <CardTitle className="text-sm flex items-center gap-2 font-black uppercase tracking-widest text-foreground">
+                      <History className="w-4 h-4 text-muted-foreground" />
+                      Match History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4 flex-1 overflow-hidden">
+                    <div className="space-y-2 h-full overflow-y-auto pr-2 custom-scrollbar">
+                      {history.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30">
+                          <History className="w-10 h-10 mb-2 opacity-50" />
+                          <p className="text-[10px] font-bold uppercase tracking-widest">No history</p>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                      ) : (
+                        history.map((match, i) => (
+                          <div key={match.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border text-xs hover:border-primary transition-all">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center font-black text-foreground border border-border">
+                                {i + 1}
+                              </div>
+                              <div>
+                                <p className="font-black uppercase tracking-widest text-foreground">{match.gameType}</p>
+                                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">
+                                  {match.createdAt?.toDate ? match.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge 
+                              className={cn(
+                                "rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest",
+                                match.winner === 'draw' ? 'bg-muted text-foreground' : (match.winner === userId ? 'bg-primary text-white' : 'bg-destructive text-white')
+                              )}
+                            >
+                              {match.winner === 'draw' ? 'Draw' : (match.winner === userId ? 'Win' : 'Loss')}
+                            </Badge>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </main>
 

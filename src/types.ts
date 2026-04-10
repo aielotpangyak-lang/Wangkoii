@@ -17,6 +17,7 @@ export interface Challenge {
   status: 'pending' | 'accepted' | 'declined';
   gameType: string;
   timerSetting?: '15' | '30' | '60' | 'unlimited';
+  selectedMark?: 'X' | 'O' | 'photoA' | 'photoB';
   createdAt: any;
 }
 
@@ -33,6 +34,8 @@ export interface GameSession {
   timerSetting?: '15' | '30' | '60' | 'unlimited';
   turnStartTime?: any;
   isBotGame?: boolean;
+  playerMarks?: Record<string, 'X' | 'O' | 'photoA' | 'photoB'>;
+  markUrls?: { photoA: string; photoB: string };
   lastMessage?: {
     uid: string;
     text: string;
