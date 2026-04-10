@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot, updateDoc, serverTimestamp, addDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { handleFirestoreError } from '../lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
@@ -15,7 +15,7 @@ import {
   DialogTrigger,
   DialogFooter,
   DialogDescription
-} from "@/components/ui/dialog";
+} from "@/components/ui/Dialog";
 import { UserProfile, GameSession, MatchHistory, OperationType } from '../types';
 import ChatComponent from '../components/Chat';
 import VoiceChat from '../components/VoiceChat';

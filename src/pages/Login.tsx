@@ -1,6 +1,6 @@
 import { signInWithPopup, OAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -73,7 +73,7 @@ export default function Login() {
           <div className="flex flex-col items-center gap-2 pt-4">
             <div className="w-12 h-0.5 bg-border" />
             <p className="text-center text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black">
-              BEST PERFORMANCE
+              60 FPS PERFORMANCE
             </p>
           </div>
         </CardContent>

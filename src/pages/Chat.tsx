@@ -4,7 +4,7 @@ import { auth, db } from '../firebase';
 import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Input } from '@/components/ui/Input';
 import { Search, User, MessageSquare, ArrowLeft, Send } from 'lucide-react';

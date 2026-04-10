@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import React, { useEffect } from 'react';
 import { doc, updateDoc, serverTimestamp, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { Toaster } from './components/ui/sonner';
+import { Toaster } from './components/ui/Sonner';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';

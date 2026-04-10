@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { ArrowLeft, CheckCircle2, Settings, CreditCard } from 'lucide-react';

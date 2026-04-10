@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { doc, setDoc, runTransaction } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';

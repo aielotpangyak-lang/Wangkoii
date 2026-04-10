@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from './ui/Button';
 
 export default function NetworkStatus({ children }: { children: React.ReactNode }) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
