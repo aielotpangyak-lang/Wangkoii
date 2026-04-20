@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  reauthenticateWithPopup, 
-  GoogleAuthProvider, 
-  OAuthProvider 
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from 'firebase/auth';
 import { doc, onSnapshot, updateDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -37,6 +36,7 @@ export default function Profile() {
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const navigate = useNavigate();
 
   const avatars = [
@@ -89,6 +89,10 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     if (!auth.currentUser || !profile) return;
+    if (!deletePassword) {
+      toast.error('Please enter your password to confirm deletion.');
+      return;
+    }
 
     setDeleteLoading(true);
     try {
@@ -96,51 +100,25 @@ export default function Profile() {
       const uid = user.uid;
       const username = profile.username;
 
-      // Function to perform the actual deletion
-      const performDeletion = async () => {
-        // 1. Delete Firestore data first
-        await deleteDoc(doc(db, 'users', uid));
-        await deleteDoc(doc(db, 'usernames', username));
+      // Re-authenticate first
+      const credential = EmailAuthProvider.credential(user.email!, deletePassword);
+      await reauthenticateWithCredential(user, credential);
 
-        // 2. Delete Auth User
-        await user.delete();
+      // 1. Delete Firestore data first
+      await deleteDoc(doc(db, 'users', uid));
+      await deleteDoc(doc(db, 'usernames', username));
 
-        toast.success('Account deleted successfully.');
-        window.location.href = '/login';
-      };
+      // 2. Delete Auth User
+      await user.delete();
 
-      try {
-        await performDeletion();
-      } catch (error: any) {
-        if (error.code === 'auth/requires-recent-login') {
-          // Attempt re-authentication
-          const providerId = user.providerData[0]?.providerId;
-          let provider;
-          
-          if (providerId === 'google.com') {
-            provider = new GoogleAuthProvider();
-          } else if (providerId === 'apple.com') {
-            provider = new OAuthProvider('apple.com');
-          }
-
-          if (provider) {
-            toast.info('For security, please re-authenticate to delete your account.');
-            await reauthenticateWithPopup(user, provider);
-            // Retry deletion after successful re-auth
-            await performDeletion();
-          } else {
-            throw error; // Fallback to manual sign-out if no provider found
-          }
-        } else {
-          throw error;
-        }
-      }
+      toast.success('Account deleted successfully.');
+      window.location.href = '/login';
     } catch (error: any) {
       console.error('Delete account error:', error);
-      if (error.code === 'auth/requires-recent-login') {
-        toast.error('Please sign out and sign in again to delete your account for security reasons.');
-      } else if (error.code === 'auth/user-cancelled' || error.code === 'auth/popup-closed-by-user') {
-        toast.error('Deletion cancelled: Re-authentication required.');
+      if (error.code === 'auth/wrong-password') {
+        toast.error('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/requires-recent-login') {
+        toast.error('Session expired. Please sign out and sign in again before deleting.');
       } else {
         toast.error('Failed to delete account: ' + (error.message || 'Unknown error'));
       }
@@ -272,7 +250,18 @@ export default function Profile() {
                           Delete Account
                         </DialogTitle>
                         <DialogDescription className="text-muted-foreground font-medium text-sm">
-                          This action is permanent. Your profile, username, and game history will be deleted. 
+                          This action is permanent. Your profile, username, and game history will be deleted.
+                          <div className="mt-4 space-y-2">
+                            <Label htmlFor="delete-password" title="Confirm Password" />
+                            <Input
+                              id="delete-password"
+                              type="password"
+                              placeholder="Enter your password"
+                              value={deletePassword}
+                              onChange={(e) => setDeletePassword(e.target.value)}
+                              className="rounded-xl border-destructive/20 focus:ring-destructive/20"
+                            />
+                          </div>
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter className="mt-4 gap-2">

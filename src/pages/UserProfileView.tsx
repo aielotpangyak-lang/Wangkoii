@@ -5,7 +5,7 @@ import { auth, db } from '../firebase';
 import { UserProfile } from '../types';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, User, MessageSquare, Swords, UserPlus, UserMinus, Clock } from 'lucide-react';
+import { ArrowLeft, User, MessageSquare, Swords, UserPlus, UserMinus, Clock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function UserProfileView() {
@@ -79,7 +79,14 @@ export default function UserProfileView() {
     }
   };
 
-  if (!profile) return <div>Loading...</div>;
+  if (!profile) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
+        Loading Profile...
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center">

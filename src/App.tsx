@@ -27,11 +27,19 @@ import NotificationsPage from './pages/Notifications';
 import NetworkStatus from './components/NetworkStatus';
 import CoffeeButton from './components/CoffeeButton';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 function AuthGuard({ children, requireProfile = true }: { children: React.ReactNode, requireProfile?: boolean }) {
   const { user, profile, loading } = useAuth();
 
-  if (loading) return <div className="flex items-center justify-center h-screen bg-background text-primary font-black uppercase tracking-widest text-xs animate-pulse">Authenticating...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
+      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
+        Loading...
+      </div>
+    </div>
+  );
 
   if (!user) return <Navigate to="/login" />;
 
@@ -172,11 +180,7 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <Routes location={location}>
           <Route path="/login" element={<AnimatedRoute><Login /></AnimatedRoute>} />
-          <Route path="/register" element={
-            <AuthGuard requireProfile={false}>
-              <AnimatedRoute><Register /></AnimatedRoute>
-            </AuthGuard>
-          } />
+          <Route path="/register" element={<AnimatedRoute><Register /></AnimatedRoute>} />
           <Route path="/" element={
             <AuthGuard>
               <AnimatedRoute><Dashboard /></AnimatedRoute>

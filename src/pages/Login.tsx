@@ -1,40 +1,40 @@
-import { signInWithPopup, OAuthProvider } from 'firebase/auth';
-import { auth, googleProvider } from '../firebase';
+import React, { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Gamepad2, Apple } from 'lucide-react';
+import { Gamepad2, Gamepad } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithEmailAndPassword(auth, email, password);
       navigate('/');
     } catch (error: any) {
-      if (error.code === 'auth/network-request-failed') {
-        toast.error('Login failed. If you are in a preview, try opening the app in a new tab.');
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        toast.error('Invalid email or password.');
       } else {
-        toast.error('Google login failed: ' + error.message);
+        toast.error('Login failed: ' + error.message);
       }
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    try {
-      const appleProvider = new OAuthProvider('apple.com');
-      await signInWithPopup(auth, appleProvider);
-      navigate('/');
-    } catch (error: any) {
-      toast.error('Apple login failed: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4 font-sans">
+    <div className="flex items-center justify-center min-h-screen p-4 font-sans bg-background">
       <Card className="w-full max-w-md border-border bg-white rounded-3xl overflow-hidden shadow-2xl">
         <CardHeader className="text-center space-y-4 pt-10">
           <motion.div 
@@ -52,29 +52,53 @@ export default function Login() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pb-12 px-8">
-          <div className="flex flex-col gap-3">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider ml-1">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="email@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="rounded-xl h-12 border-border focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider ml-1">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="rounded-xl h-12 border-border focus:ring-primary/20"
+              />
+            </div>
             <Button 
-              onClick={handleGoogleLogin} 
-              className="w-full h-14 text-sm font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-sm transition-all"
+              type="submit" 
+              className="w-full h-14 text-sm font-black uppercase tracking-widest bg-primary text-white hover:bg-primary/90 rounded-2xl shadow-sm transition-all mt-4"
+              disabled={loading}
             >
-              Sign in with Google
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
-            
-            <Button 
-              onClick={handleAppleLogin} 
-              variant="outline"
-              className="w-full h-14 text-sm font-black uppercase tracking-widest rounded-2xl border-border text-foreground hover:bg-muted transition-all"
-            >
-              <Apple className="w-5 h-5 mr-2" />
-              Sign in with Apple
-            </Button>
-          </div>
+          </form>
           
-          <div className="flex flex-col items-center gap-2 pt-4">
-            <div className="w-12 h-0.5 bg-border" />
-            <p className="text-center text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black">
-              60 FPS PERFORMANCE
+          <div className="flex flex-col items-center gap-4 pt-2">
+            <p className="text-xs text-muted-foreground font-medium">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary font-black uppercase tracking-wider hover:underline">
+                Register
+              </Link>
             </p>
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-0.5 bg-border" />
+              <p className="text-center text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-black">
+                60 FPS PERFORMANCE
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

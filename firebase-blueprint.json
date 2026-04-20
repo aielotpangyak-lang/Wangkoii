@@ -6,7 +6,7 @@
       "type": "object",
       "properties": {
         "uid": { "type": "string", "description": "Firebase Auth UID" },
-        "username": { "type": "string", "description": "Numerical username with optional slash" },
+        "username": { "type": "string", "description": "Alphabetic-only username (6-20 chars)" },
         "name": { "type": "string", "description": "Display name" },
         "isOnline": { "type": "boolean", "description": "Current online status" },
         "lastSeen": { "type": "string", "format": "date-time", "description": "Last activity timestamp" },

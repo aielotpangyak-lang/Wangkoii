@@ -20,7 +20,7 @@ import { UserProfile, GameSession, MatchHistory, OperationType } from '../types'
 import ChatComponent from '../components/Chat';
 import VoiceChat from '../components/VoiceChat';
 import { toast } from 'sonner';
-import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle, EyeOff } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Trophy, History, MessageSquare, Send, Info, AlertTriangle, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/Input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -171,11 +171,9 @@ export default function Game() {
 
   if (!game || !userId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-primary font-black uppercase tracking-widest text-xs animate-pulse">Loading Game Session...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">Loading Game Session...</p>
       </div>
     );
   }
@@ -460,15 +458,13 @@ export default function Game() {
 
           <div className="relative grid grid-cols-3 gap-3 bg-white p-4 rounded-2xl border border-border shadow-sm w-full max-w-[400px] aspect-square">
             {game.board?.map((cell, i) => (
-              <motion.button
+              <button
                 key={i}
-                whileHover={!cell && isMyTurn ? { backgroundColor: 'var(--muted)', scale: 1.02 } : {}}
-                whileTap={!cell && isMyTurn ? { scale: 0.95 } : {}}
                 disabled={!!cell || !isMyTurn || game.status === 'finished'}
                 onClick={() => handleMove(i)}
                 className={cn(
-                  "bg-muted/10 rounded-xl flex items-center justify-center text-6xl font-mono font-black transition-all border border-border",
-                  !cell && isMyTurn && game.status === 'active' && "cursor-pointer hover:border-primary hover:bg-muted/20",
+                  "bg-muted/10 rounded-xl flex items-center justify-center text-6xl font-mono font-black transition-all border border-border outline-none active:scale-95",
+                  !cell && isMyTurn && game.status === 'active' && "cursor-pointer hover:border-primary hover:bg-muted/20 hover:scale-[1.02]",
                   cell === userId ? "text-primary" : "text-foreground",
                   cell && "bg-white shadow-inner"
                 )}
@@ -478,7 +474,7 @@ export default function Game() {
                     initial={{ scale: 0, rotate: -45 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className="w-full h-full flex items-center justify-center"
+                    className="w-full h-full flex items-center justify-center pointer-events-none"
                   >
                     {(() => {
                       const mark = game.playerMarks?.[cell];
@@ -487,7 +483,7 @@ export default function Game() {
                     })()}
                   </motion.span>
                 ) : ''}
-              </motion.button>
+              </button>
             ))}
 
             {game.status === 'finished' && (

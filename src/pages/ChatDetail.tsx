@@ -6,7 +6,7 @@ import { UserProfile, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { ArrowLeft, User, Phone, Video, MoreVertical } from 'lucide-react';
+import { ArrowLeft, User, Phone, Video, MoreVertical, Loader2 } from 'lucide-react';
 import ChatComponent from '../components/Chat';
 import { motion } from 'motion/react';
 
@@ -59,8 +59,11 @@ export default function ChatDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
+          Loading Chat...
+        </div>
       </div>
     );
   }

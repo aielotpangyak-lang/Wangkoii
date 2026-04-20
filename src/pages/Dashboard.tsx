@@ -315,9 +315,37 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen text-foreground relative overflow-hidden font-sans">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-30 w-full bg-white/80 backdrop-blur-xl border-b border-border h-16">
+        <div className="max-w-2xl mx-auto h-full flex items-center justify-between px-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-10 h-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
+            onClick={() => setIsChatOpen(true)}
+          >
+            <MessageSquare className="w-5 h-5" />
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <Gamepad2 className="w-5 h-5 text-primary" />
+            <span className="font-black tracking-tighter text-lg uppercase">WANGKOII</span>
+          </div>
+
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="w-10 h-10 rounded-xl text-muted-foreground hover:text-primary hover:bg-muted"
+            onClick={() => setIsSearchOpen(true)}
+          >
+            <Search className="w-5 h-5" />
+          </Button>
+        </div>
+      </header>
+
       {/* Main Content - Centered */}
-      <main className="relative z-10 max-w-2xl mx-auto px-4 pt-8 pb-32">
-        <div className="flex flex-col items-center mb-12 text-center">
+      <main className="relative z-10 max-w-2xl mx-auto px-4 pt-12 pb-32">
+        <div className="flex flex-col items-center mb-12 text-center md:hidden">
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -527,7 +555,11 @@ export default function Dashboard() {
                     <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Search Results</p>
                     {filteredUsers.length > 0 ? (
                       filteredUsers.map(user => (
-                        <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 hover:bg-pink-50 transition-all group">
+                        <div 
+                          key={user.uid} 
+                          className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 hover:bg-pink-50 transition-all group cursor-pointer"
+                          onClick={() => openProfileModal(user)}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="relative">
                               <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -545,7 +577,12 @@ export default function Dashboard() {
                           
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100 h-10 w-10 shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -576,7 +613,11 @@ export default function Dashboard() {
                       <p className="text-xs font-bold uppercase tracking-widest text-pink-400 px-1">Online Now</p>
                       <div className="grid gap-3">
                         {randomOnlinePlayers.map(user => (
-                          <div key={user.uid} className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 group">
+                          <div 
+                            key={user.uid} 
+                            className="flex items-center justify-between p-3 rounded-2xl bg-pink-50/30 border border-pink-100 group cursor-pointer transition-colors hover:bg-pink-50"
+                            onClick={() => openProfileModal(user)}
+                          >
                             <div className="flex items-center gap-3">
                               <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -594,7 +635,12 @@ export default function Dashboard() {
                             
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="rounded-xl text-pink-400 hover:text-pink-600 hover:bg-pink-100 h-10 w-10 shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
                                   <MoreVertical className="w-4 h-4" />
                                 </Button>
                               </DropdownMenuTrigger>

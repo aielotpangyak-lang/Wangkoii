@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { getAuth, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../firebase-applet-config.json';
@@ -11,4 +11,3 @@ setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error("Auth persistence setup failed:", error);
 });
 export const storage = getStorage(app);
-export const googleProvider = new GoogleAuthProvider();

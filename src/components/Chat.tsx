@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Message, OperationType } from '../types';
-import { Send, Lock, ShieldCheck, Bot } from 'lucide-react';
+import { Send, Lock, ShieldCheck, Bot, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
@@ -97,7 +97,14 @@ export default function Chat({ opponentUid, opponentName }: ChatProps) {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground animate-pulse">Loading messages...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center p-8 gap-3">
+      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+      <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
+        Loading messages...
+      </div>
+    </div>
+  );
 
   if (opponentUid === 'bot') {
     return (

@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 import { Notification, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
-import { Bell, Send, Trash2, CheckCircle2, Info, CreditCard, Newspaper } from 'lucide-react';
+import { Bell, Send, Trash2, CheckCircle2, Info, CreditCard, Newspaper, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -178,7 +178,12 @@ export default function NotificationsPage() {
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {loading ? (
-            <div className="text-center py-12 text-muted-foreground">Loading notifications...</div>
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
+                Loading Notifications...
+              </div>
+            </div>
           ) : notifications.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center text-muted-foreground">
