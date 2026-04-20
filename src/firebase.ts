@@ -13,7 +13,6 @@ const app = initializeApp(firebaseConfig);
 // Use initializeFirestore with long polling to ensure connectivity in sandboxed environments
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-  experimentalAutoDetectLongPolling: true,
   ignoreUndefinedProperties: true,
 }, firebaseConfig.firestoreDatabaseId);
 

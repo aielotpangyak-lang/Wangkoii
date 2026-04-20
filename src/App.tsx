@@ -7,7 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import React, { useEffect } from 'react';
 import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { Toaster } from './components/ui/Sonner';
+import { Toaster } from 'sonner';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { handleFirestoreError } from './lib/utils';
@@ -27,16 +27,51 @@ import NotificationsPage from './pages/Notifications';
 import NetworkStatus from './components/NetworkStatus';
 import CoffeeButton from './components/CoffeeButton';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50 p-6 text-center">
+          <AlertCircle className="w-12 h-12 text-pink-600 mb-4" />
+          <h1 className="text-2xl font-black text-pink-900 mb-2 uppercase">Something went wrong</h1>
+          <p className="text-pink-600 mb-6 max-w-md">The application crashed. This could be due to a network error or a code issue.</p>
+          <pre className="p-4 bg-white/50 rounded-xl text-left text-xs overflow-auto max-width-full mb-6 border border-pink-100 max-h-40">
+            {this.state.error?.message}
+          </pre>
+          <Button onClick={() => window.location.reload()} className="bg-pink-600 hover:bg-pink-700">
+            Restart App
+          </Button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function AuthGuard({ children, requireProfile = true }: { children: React.ReactNode, requireProfile?: boolean }) {
   const { user, profile, loading } = useAuth();
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
-      <Loader2 className="w-10 h-10 text-primary animate-spin" />
-      <div className="text-primary font-black uppercase tracking-widest text-[10px] animate-pulse">
-        Loading...
+    <div className="flex flex-col items-center justify-center h-screen bg-pink-50 gap-4">
+      <div className="w-10 h-10 border-4 border-pink-200 border-t-pink-600 rounded-full animate-spin" />
+      <div className="text-pink-600 font-bold uppercase tracking-widest text-xs">
+        Connecting...
       </div>
     </div>
   );
@@ -50,11 +85,13 @@ function AuthGuard({ children, requireProfile = true }: { children: React.ReactN
 
 export default function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
@@ -76,6 +113,8 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
+    // Temporarily disabled global settings sync for stability check
+    /*
     const unsub = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -99,6 +138,7 @@ function AppContent() {
       handleFirestoreError(error, OperationType.GET, 'settings/global');
     });
     return () => unsub();
+    */
   }, []);
 
   useEffect(() => {
@@ -233,8 +273,9 @@ function AppContent() {
           } />
         </Routes>
       </AnimatePresence>
-      <Toaster />
-      <CoffeeButton />
+      {/* Temporarily hidden */}
+      {/* <Toaster /> */}
+      {/* <CoffeeButton /> */}
     </NetworkStatus>
   );
 }

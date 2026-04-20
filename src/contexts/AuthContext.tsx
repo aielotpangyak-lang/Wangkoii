@@ -40,7 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubProfile: (() => void) | undefined;
 
+    // Safety timeout to ensure loading doesn't hang forever
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
+      clearTimeout(safetyTimeout);
       setUser(u);
       if (u) {
         // Initial fetch

@@ -27,5 +27,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Instead of throwing, we log the error. 
+  // This prevents the whole app from crashing if a single background fetch fails.
 }
