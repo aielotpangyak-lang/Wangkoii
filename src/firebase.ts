@@ -13,6 +13,8 @@ const app = initializeApp(firebaseConfig);
 // Use initializeFirestore with long polling to ensure connectivity in sandboxed environments
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: true,
+  ignoreUndefinedProperties: true,
 }, firebaseConfig.firestoreDatabaseId);
 
 export const auth = getAuth(app);
@@ -24,6 +26,8 @@ export const storage = getStorage(app);
 
 // Connectivity Test Connection Connection
 async function testConnection() {
+  // Short delay to allow network stack to initialize
+  await new Promise(resolve => setTimeout(resolve, 2000));
   try {
     // Try to reach the server directly to bypass local cache
     // Using 'settings/status' because it's allowed for public read in firestore.rules

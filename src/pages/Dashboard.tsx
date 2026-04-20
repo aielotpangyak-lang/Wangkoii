@@ -564,7 +564,7 @@ export default function Dashboard() {
                             <div className="relative">
                               <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                                 {user.photoURL ? (
-                                  <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
+                                  <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" loading="lazy" />
                                 ) : <User className="w-5 h-5 text-pink-400" />}
                               </div>
                               {user.isOnline && <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />}
@@ -622,7 +622,7 @@ export default function Dashboard() {
                               <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                                   {user.photoURL ? (
-                                    <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
+                                    <img src={user.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" loading="lazy" />
                                   ) : <User className="w-5 h-5 text-pink-400" />}
                                 </div>
                                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
@@ -873,7 +873,7 @@ export default function Dashboard() {
                   <div className="w-24 h-24 rounded-3xl bg-white p-1 shadow-lg">
                     <div className="w-full h-full rounded-2xl bg-pink-100 flex items-center justify-center overflow-hidden">
                       {selectedUser.photoURL ? (
-                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" />
+                        <img src={selectedUser.photoURL} alt="" className="w-full h-full object-cover aspect-square" referrerPolicy="no-referrer" loading="lazy" />
                       ) : <User className="w-10 h-10 text-pink-400" />}
                     </div>
                   </div>
