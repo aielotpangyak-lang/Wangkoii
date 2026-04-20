@@ -18,14 +18,16 @@ import {
 } from 'firebase/firestore';
 import { Notification, OperationType } from '../types';
 import { handleFirestoreError } from '../lib/utils';
-import { Bell, Send, Trash2, CheckCircle2, Info, CreditCard, Newspaper, Loader2 } from 'lucide-react';
+import { Bell, Send, Trash2, CheckCircle2, Info, CreditCard, Newspaper, Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 export default function NotificationsPage() {
   const { user, isAdmin } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Admin state
   const [title, setTitle] = useState('');
@@ -104,7 +106,15 @@ export default function NotificationsPage() {
 
   return (
     <div className="p-4 pb-24 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => navigate(-1)} 
+          className="rounded-xl text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </Button>
         <h1 className="text-3xl font-black tracking-tight flex items-center gap-2">
           <Bell className="w-8 h-8 text-pink-500" />
           Notifications
