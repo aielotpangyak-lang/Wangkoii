@@ -4,10 +4,11 @@
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import React, { useEffect } from 'react';
+import React, { useEffect, Component, ReactNode } from 'react';
 import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { Toaster } from 'sonner';
+import { Button } from './components/ui/Button';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { handleFirestoreError } from './lib/utils';
@@ -29,10 +30,19 @@ import CoffeeButton from './components/CoffeeButton';
 import { toast } from 'sonner';
 import { Loader2, AlertCircle } from 'lucide-react';
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
-  constructor(props: any) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    (this as any).state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -44,14 +54,15 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 
   render() {
-    if (this.state.hasError) {
+    const { hasError, error } = (this as any).state;
+    if (hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-pink-50 p-6 text-center">
           <AlertCircle className="w-12 h-12 text-pink-600 mb-4" />
           <h1 className="text-2xl font-black text-pink-900 mb-2 uppercase">Something went wrong</h1>
           <p className="text-pink-600 mb-6 max-w-md">The application crashed. This could be due to a network error or a code issue.</p>
           <pre className="p-4 bg-white/50 rounded-xl text-left text-xs overflow-auto max-width-full mb-6 border border-pink-100 max-h-40">
-            {this.state.error?.message}
+            {error?.message}
           </pre>
           <Button onClick={() => window.location.reload()} className="bg-pink-600 hover:bg-pink-700">
             Restart App
@@ -60,7 +71,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
 
